@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -Wall -Wextra -pedantic -Werror -std=gnu++20 -o CMakeFiles/Onol.dir/src/main.cpp.o -c /home/onovak/source/onol/src/main.cpp",
+  "file": "/home/onovak/source/onol/src/main.cpp"
+}
+]
