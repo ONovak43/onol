@@ -1,12 +1,11 @@
-#include "allocator.hpp"
-#include <cstdint>
-#include <iostream>
-#include <vector>
+#include "bytecode.hpp"
 
 #define DEBUG
 
 int main() {
-    std::vector<uint8_t, Allocator<uint8_t>> vec;
+    Bytecode bytecode;
+    bytecode.put(OpCode::OP_RETURN);
+    bytecode.free();
     return 0;
 }
 

@@ -1,5 +1,7 @@
-#include <cstdint>
+#include "allocator.hpp"
+
 #include <vector>
+#include <cstdint>
 
 enum class OpCode {
     OP_RETURN
@@ -7,9 +9,10 @@ enum class OpCode {
 
 class Bytecode {
 private:
-    std::vector<uint8_t> code;
+    std::vector<std::uint8_t, Allocator<std::uint8_t>> code;
 
 public:
     Bytecode() = default;
-    void put(uint8_t byte);
+    void put(OpCode byte);
+    void free();
 };

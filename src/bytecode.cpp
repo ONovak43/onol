@@ -1,6 +1,8 @@
 #include <bytecode.hpp>
-#include <cstdint>
 
-void Bytecode::put(uint8_t byte) {
-    code.push_back(byte);
+void Bytecode::put(OpCode byte) { code.push_back(static_cast<uint8_t>(byte)); }
+
+void Bytecode::free() {
+  code.clear();
+  code.shrink_to_fit();
 }
