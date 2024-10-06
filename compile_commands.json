@@ -1,7 +1,37 @@
 [
 {
   "directory": "/home/onovak/source/onol/build",
-  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -Wall -Wextra -pedantic -Werror -std=gnu++20 -o CMakeFiles/Onol.dir/src/main.cpp.o -c /home/onovak/source/onol/src/main.cpp",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -Wall -Wextra -pedantic -Werror -std=gnu++20 -Winvalid-pch -x c++-header -include /home/onovak/source/onol/build/CMakeFiles/Onol.dir/cmake_pch.hxx -o CMakeFiles/Onol.dir/cmake_pch.hxx.gch -c /home/onovak/source/onol/build/CMakeFiles/Onol.dir/cmake_pch.hxx.cxx",
+  "file": "/home/onovak/source/onol/build/CMakeFiles/Onol.dir/cmake_pch.hxx.cxx"
+},
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -Wall -Wextra -pedantic -Werror -std=gnu++20 -Winvalid-pch -include /home/onovak/source/onol/build/CMakeFiles/Onol.dir/cmake_pch.hxx -o CMakeFiles/Onol.dir/src/allocator.cpp.o -c /home/onovak/source/onol/src/allocator.cpp",
+  "file": "/home/onovak/source/onol/src/allocator.cpp"
+},
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -Wall -Wextra -pedantic -Werror -std=gnu++20 -Winvalid-pch -include /home/onovak/source/onol/build/CMakeFiles/Onol.dir/cmake_pch.hxx -o CMakeFiles/Onol.dir/src/bytecode.cpp.o -c /home/onovak/source/onol/src/bytecode.cpp",
+  "file": "/home/onovak/source/onol/src/bytecode.cpp"
+},
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -Wall -Wextra -pedantic -Werror -std=gnu++20 -Winvalid-pch -include /home/onovak/source/onol/build/CMakeFiles/Onol.dir/cmake_pch.hxx -o CMakeFiles/Onol.dir/src/main.cpp.o -c /home/onovak/source/onol/src/main.cpp",
   "file": "/home/onovak/source/onol/src/main.cpp"
+},
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -std=gnu++20 -Winvalid-pch -x c++-header -include /home/onovak/source/onol/build/CMakeFiles/tests.dir/cmake_pch.hxx -o CMakeFiles/tests.dir/cmake_pch.hxx.gch -c /home/onovak/source/onol/build/CMakeFiles/tests.dir/cmake_pch.hxx.cxx",
+  "file": "/home/onovak/source/onol/build/CMakeFiles/tests.dir/cmake_pch.hxx.cxx"
+},
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -std=gnu++20 -Winvalid-pch -include /home/onovak/source/onol/build/CMakeFiles/tests.dir/cmake_pch.hxx -o CMakeFiles/tests.dir/tests/test_allocator.cpp.o -c /home/onovak/source/onol/tests/test_allocator.cpp",
+  "file": "/home/onovak/source/onol/tests/test_allocator.cpp"
+},
+{
+  "directory": "/home/onovak/source/onol/build",
+  "command": "/usr/bin/c++  -I/home/onovak/source/onol/include -O3 -DNDEBUG -std=gnu++20 -Winvalid-pch -include /home/onovak/source/onol/build/CMakeFiles/tests.dir/cmake_pch.hxx -o CMakeFiles/tests.dir/src/allocator.cpp.o -c /home/onovak/source/onol/src/allocator.cpp",
+  "file": "/home/onovak/source/onol/src/allocator.cpp"
 }
 ]
