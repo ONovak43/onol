@@ -23,7 +23,7 @@ else()
     target_compile_options(Onol PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(Catch2 3 REQUIRED)
 

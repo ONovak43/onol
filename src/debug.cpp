@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <ostream>
 
+#include "bytecode.hpp"
 #include "types.hpp"
 
 static std::size_t simpleInstruction(const std::string& name, std::size_t offset) {
@@ -21,9 +22,8 @@ static std::size_t constantInstruction(const std::string& name, Bytecode& byteco
 }
 
 static std::size_t constantLongInstruction(const std::string& name, Bytecode& bytecode, std::size_t offset) {
-  uint32_t constantAddress = bytecode.getConstantAddress(offset + 1)
-    | (bytecode.getConstantAddress(offset + 2) << 8)
-    | (bytecode.getConstantAddress(offset + 3) << 16);
+  uint32_t constantAddress = bytecode.getConstantAddress(offset + 1) | (bytecode.getConstantAddress(offset + 2) << 8) |
+                             (bytecode.getConstantAddress(offset + 3) << 16);
 
   std::cout << std::left << std::setw(16) << name << std::setw(4) << static_cast<int>(constantAddress) << "'";
   std::cout << std::setfill(' ') << std::setw(0);
@@ -53,10 +53,20 @@ int dissasembleInstruction(Bytecode& bytecode, uint32_t offset) {
 
   OpCode opCode = bytecode.getOpCode(offset);
   switch (opCode) {
-    case OpCode::OP_CONSTANT_LONG:
-      return constantLongInstruction("OP_CONSTANT_LONG", bytecode, offset);
     case OpCode::OP_CONSTANT:
       return constantInstruction("OP_CONSTANT", bytecode, offset);
+    case OpCode::OP_CONSTANT_LONG:
+      return constantLongInstruction("OP_CONSTANT_LONG", bytecode, offset);
+    case OpCode::OP_ADD:
+    return simpleInstruction("OP_ADD", offset);
+    case OpCode::OP_SUBTRACT:
+    return simpleInstruction("OP_SUBTRACT", offset);
+    case OpCode::OP_MULTIPLY:
+    return simpleInstruction("OP_MULTIPLY", offset);
+    case OpCode::OP_DIVIDE:
+    return simpleInstruction("OP_DIVIDE", offset);
+    case OpCode::OP_NEGATE:
+      return simpleInstruction("OP_NEGATE", offset);
     case OpCode::OP_RETURN:
       return simpleInstruction(std::string("OP_RETURN"), offset);
     default:

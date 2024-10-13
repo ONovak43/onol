@@ -11,8 +11,6 @@ void Bytecode::addLine(uint32_t line) {
   lineStart->line = line;
   lineStart->offset = code.size() - 1;
 
-  std::cout << "Offset: " << lineStart->offset << "\n";
-
   lines.push_back(std::move(lineStart));
 }
 
@@ -75,6 +73,11 @@ uint32_t Bytecode::getLine(std::size_t offset) {
   }
   return 0;
 }
+
+uint8_t* Bytecode::getCodePointer() {
+  return code.data();
+}
+
 std::size_t Bytecode::count() {
   return code.size();
 }

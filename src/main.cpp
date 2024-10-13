@@ -1,25 +1,30 @@
+#include <memory>
 #include "bytecode.hpp"
-#include "debug.hpp"
-
-#define DEBUG
+#include "vm.hpp"
 
 int main() {
-  Bytecode bytecode;
+  std::shared_ptr<Bytecode> bytecode = std::make_shared<Bytecode>();
+  VM vm;
 
-  Type intValue = 42;
+  bytecode->putConstant(42, 1);
+  bytecode->putConstant(10, 1);
+  bytecode->putOpCode(OpCode::OP_ADD, 1);
 
-  bytecode.putOpCode(OpCode::OP_CONSTANT, 1);
-  bytecode.putConstant(intValue, 1);
-  std::cout << "Line 1: " << bytecode.getLine(0) << "\n";
-  std::cout << "Line 1: " << bytecode.getLine(1) << "\n";
-  bytecode.putOpCode(OpCode::OP_RETURN, 2);
-  std::cout << "Line 2: " << bytecode.getLine(2) << "\n";
-  bytecode.putOpCode(OpCode::OP_RETURN, 3);
-  std::cout << "Line 3: " << bytecode.getLine(3) << "\n";
-  bytecode.putOpCode(OpCode::OP_RETURN, 3);
-  std::cout << "Line 3: " << bytecode.getLine(3) << "\n";
-  dissasembleBytecode(bytecode, "test chunk");
+  bytecode->putConstant(39, 1);
+  bytecode->putOpCode(OpCode::OP_SUBTRACT, 1);
+  bytecode->putConstant(12, 1);
+  bytecode->putOpCode(OpCode::OP_SUBTRACT, 1);
 
-  bytecode.free();
+  bytecode->putConstant(2.1, 1);
+  bytecode->putOpCode(OpCode::OP_MULTIPLY, 1);
+
+  bytecode->putConstant(2, 1);
+  bytecode->putOpCode(OpCode::OP_DIVIDE, 1);
+
+  bytecode->putOpCode(OpCode::OP_RETURN, 2);
+
+  vm.interpret(bytecode);
+
+  bytecode->free();
   return 0;
 }

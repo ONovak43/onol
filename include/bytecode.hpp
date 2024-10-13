@@ -8,9 +8,14 @@
 #include "allocator.hpp"
 #include "types.hpp"
 
-enum class OpCode {
+enum class OpCode : uint8_t {
   OP_CONSTANT,
   OP_CONSTANT_LONG,
+  OP_ADD,
+  OP_SUBTRACT,
+  OP_MULTIPLY,
+  OP_DIVIDE,
+  OP_NEGATE,
   OP_RETURN
 };
 
@@ -36,5 +41,6 @@ class Bytecode {
   uint8_t getConstantAddress(int index);
   Type getConstant(int address);
   uint32_t getLine(std::size_t address);
+  uint8_t* getCodePointer();
   std::size_t count();
 };

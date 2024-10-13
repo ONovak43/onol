@@ -2,12 +2,7 @@
 
 #include "bytecode.hpp"
 
-#ifdef DEBUG
-#define DEBUG_PRINT(x) std::cout << x << std::endl
-#else
-#define DEBUG_PRINT(x)
-#endif
+#define DEBUG_TRACE_EXECUTION
 
 void dissasembleBytecode(Bytecode& bytecode, const std::string& name);
 int dissasembleInstruction(Bytecode& bytecode, uint32_t offset);
-
