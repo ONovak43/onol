@@ -79,3 +79,19 @@
 
 <IDENTIFIER> ::= ([a-z] | [A-Z] | "_") ([a-z] | [A-Z] | [0-9] | "_")*
 
+# Keywords
+
+- interface
+- struct
+- fn
+- mut
+- let
+- for
+- in
+- if
+- else
+- return
+- returnif
+- true
+- false
+- nil
