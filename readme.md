@@ -1,73 +1,81 @@
 # Grammar
 
-program         -> declaration* EOF;
+<program> ::= <declaration>* "EOF"
 
-declaration     -> interfaceDecl
-                | structDecl
-                | fnDecl
-                | varDecl
-                | statement ;
+<declaration> ::= <interfaceDecl>
+                | <structDecl>
+                | <fnDecl>
+                | <varDecl>
+                | <statement>
 
-interfaceDecl   -> "interface" INDENTIFIER "{" interfaceDecl* "}" ;
-interfaceBody   -> fnSig* ;
-fnSig           -> INDENTIFIER "(" parameters? ")" ( ":" Type)? ;
+<interfaceDecl> ::= "interface" <IDENTIFIER> "{" <interfaceBody> "}"
+<interfaceBody> ::= <fnSig>*
+<fnSig> ::= <IDENTIFIER> "(" <parameters>? ")" ( ":" <Type> )?
 
-structDecl      -> "struct" INDENTIFIER (":" INDENTIFIER ("," IDENTIFIER)*)* "{" structBody* "}" ;
-structBody      -> (varDecl | fnDecl)* ;
+<structDecl> ::= "struct" <IDENTIFIER> ( ":" <IDENTIFIER> ( "," <IDENTIFIER> )* )? "{" <structBody> "}"
+<structBody> ::= ( <varDecl> | <fnDecl> )*
 
-fnDecl          -> "fn" function ;
-function        -> IDENTIFIER "(" parameters? ")" (":" Type)? block ;
-parameters      -> parameter ( "," parameter )* ;
-parameter       -> ("mut"? Type IDENTIFIER) ;
+<fnDecl> ::= "fn" <function>
+<function> ::= <IDENTIFIER> "(" <parameters>? ")" ( ":" <Type> )? <block>
+<parameters> ::= <parameter> ( "," <parameter> )*
+<parameter> ::= ( "mut"? <Type> <IDENTIFIER> )
 
-varDecl         -> ("mut")? ( Type | let) IDENTIFIER ( "=" expression")?  ;
+<varDecl> ::= "mut"? ( <Type> | "let" ) <IDENTIFIER> ( "=" <expression> )?
+<Type> ::= "int" | "double" | "string" | "boolean" | <IDENTIFIER>
 
-Type            -> "int" | "double" | "string" | "boolean" | IDENTIFIER ;
+<statement> ::= <exprStmt>
+              | <forStmt>
+              | <ifStmt>
+              | <returnStmt>
+              | <returnIfStmt>
+              | <block>
 
-statement       -> exprStmt
-                -> forStmt
-                -> ifStmt
-                -> returnStmt
-                -> returnIfStmt
-                -> block ;
+<exprStmt> ::= <expression>
 
-exprStmt        -> expression ;
+<forStmt> ::= "for" <forControl> "{" <statement> "}"
 
-forStmt         -> "for" forControl statement ;
-forControl      -> expression
-                -> varDecl? ";" expression? ";" expression?
-                | ("mut")? (Type | let) IDENTIFIER "in" expression ;
+<forControl> ::= <expression>
+               | ( "mut"? ( <Type> | "let" ) <IDENTIFIER> "in" <expression> )
 
-ifStmt          -> "if" expression statement ("else" statement)? ;
+<ifStmt> ::= "if" <expression> "{" <statement> "}" ( "else" "{" <statement> "}" )?
 
-returnStmt      -> "return" expression? ;
-returnIfStmt    -> "returnif" expression ;
+<returnStmt> ::= "return" <expression>?
+<returnIfStmt> ::= "returnif" <expression>
 
-block           -> "{" declaration* "}" ;
+<block> ::= "{" <declaration>* "}"
 
-expression      -> assignment;
-assignment      -> (call ".")? IDENTIFIER "=" assignment
-                | logicOr ;
+<expression> ::= <assignment>
+<assignment> ::= ( <call> "." )? <IDENTIFIER> "=" <assignment>
+               | <logicOr>
+<logicOr> ::= <logicAnd> ( "or" <logicAnd> )*
+<logicAnd> ::= <equality> ( "and" <equality> )*
 
-logicOr         -> logicAnd ("or" logicAnd)* ;
-logicAnd        -> equality ("and" equality)* ;
+<equality> ::= <comparison> ( ( "!=" | "==" ) <comparison> )*
+<comparison> ::= <term> ( ( ">" | ">=" | "<" | "<=" ) <term> )*
 
-equality        -> comparison (("!=" | "==") comparison)* ;
-comparison      -> term ((">" | ">=" | "<" | "<=") term)* ;
+<term> ::= <factor> ( ( "-" | "+" ) <factor> )*
+<factor> ::= <unary> ( ( "/" | "*" ) <unary> )*
 
-term            -> factor (("-" | "+") factor)* ;
-factor          -> unary (("/" | "*") unary)* ;
-unary           -> ("!" | "-") unary | call ;
+<unary> ::= ( "!" | "-" ) <unary> | <call>
 
-call            -> primary ("(" arguments? ")" | "." IDENTIFIER)* ;
-primary         -> "true" | " false" | "nil" | "this" | NUMBER
-                | STRING | IDENTIFIER | "(" expression ")"
+<call> ::= <primary> ( "(" <arguments>? ")" | "." <IDENTIFIER> )*
+<primary> ::= "true" | "false" | "nil" | "this" | <NUMBER>
+            | <STRING> | <IDENTIFIER> | "(" <expression> ")"
 
-arguments       -> expression ("," expression)* ;
+<arguments> ::= <expression> ( "," <expression> )*
 
-NUMBER          -> DIGIT+ ("." DIGIT+)? ;
-STRING          -> "\"" (<any char except "\"">)* "\"" ;
-IDENTIFIER      -> ALPHA (ALPHA | DIGIT)* ;
-ALPHA           -> "a" ... "z" | "A" ... "Z" | "_" ;
-DIGIT           -> "0" ... "9" ;
+<NUMBER> ::= [0-9]+ ( "." [0-9]+ )?
+<STRING> ::= "\"" ( <STRING_CHAR> )* "\""
+<STRING_CHAR> ::= [a-z] | [A-Z] | [0-9] | " " | <SPECIAL_CHAR> | <ESCAPED_CHAR>
+
+<SPECIAL_CHAR> ::= "!" | "#" | "$" | "%" | "&" | "'" | "(" | ")" | "*" | "+"
+                | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?"
+                | "@" | "[" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~"
+
+<ESCAPED_CHAR> ::= "\\\""
+                 | "\\\\"
+                 | "\n"
+                 | "\t"
+
+<IDENTIFIER> ::= ([a-z] | [A-Z] | "_") ([a-z] | [A-Z] | [0-9] | "_")*
 
