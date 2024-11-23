@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "bytecode.hpp"
+#include "compiler.hpp"
 #include "types.hpp"
 
 enum class InterpretResult {
@@ -20,6 +21,7 @@ class VM {
   std::shared_ptr<Bytecode> bytecode;
   uint8_t* ip;
   std::deque<Type> stack;
+  Compiler compiler;
 
   Type pop();
   void push(Type value);
@@ -71,6 +73,6 @@ class VM {
   }
 
  public:
-  InterpretResult interpret(std::shared_ptr<Bytecode> bytecode);
+  InterpretResult interpret(const std::string& sourceCode);
   InterpretResult run();
 };

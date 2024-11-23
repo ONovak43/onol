@@ -7,6 +7,7 @@
 #include "bytecode.hpp"
 #include "debug.hpp"
 #include "types.hpp"
+#include <iostream>
 
 Type VM::pop() {
   Type stackValue = stack.back();
@@ -18,10 +19,9 @@ void VM::push(Type value) {
   stack.push_back(value);
 }
 
-InterpretResult VM::interpret(std::shared_ptr<Bytecode> bcode) {
-  bytecode = bcode;
-  ip = bytecode->getCodePointer();
-  return run();
+InterpretResult VM::interpret(const std::string& sourceCode) {
+  compiler.compile(sourceCode);
+  return InterpretResult::INTERPRET_OK;
 }
 
 InterpretResult VM::run() {
