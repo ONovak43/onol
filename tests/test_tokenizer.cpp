@@ -57,8 +57,8 @@ std::vector<Token> tokens = {
     {41, TokenType::TYPE_STRING, "string"},
     {42, TokenType::TRUE, "true", std::make_optional<Type>(true)},
     {43, TokenType::FALSE, "false", std::make_optional<Type>(false)},
-    {44, TokenType::NIL, "nil"},
-    {45, TokenType::THIS, "this"}};
+    {44, TokenType::THIS, "this"},
+    {45, TokenType::NIL, "nil"}};
 
 std::string whitespace = " \t\n";
 
@@ -78,7 +78,7 @@ TEST_CASE("Tokenizer correctly scans tokens") {
 
   int prevLine = 1;
 
-  for (auto i = 0; token && token->type != TokenType::END;
+  for (auto i = 0; i < tokens.size() && token && token->type != TokenType::END;
        token = std::make_unique<Token>(sut.scanToken()), ++i) {
     Token expected = tokens[i];
     if (token->line != expected.line) {
@@ -93,7 +93,168 @@ TEST_CASE("Tokenizer correctly scans tokens") {
   }
 }
 
-TEST_CASE("More complex code is tokenized correctly:", "[tokenizer]") {
+struct SemicolonTest {
+  std::string input;
+  std::string expectedTokens;
+};
+
+std::string tokenTypeToString(TokenType type) {
+  switch (type) {
+    case TokenType::LEFT_PAREN:
+      return "(";
+    case TokenType::RIGHT_PAREN:
+      return ")";
+    case TokenType::LEFT_BRACE:
+      return "{";
+    case TokenType::RIGHT_BRACE:
+      return "}";
+    case TokenType::COMMA:
+      return ",";
+    case TokenType::DOT:
+      return ".";
+    case TokenType::MINUS:
+      return "-";
+    case TokenType::PLUS:
+      return "+";
+    case TokenType::SEMICOLON:
+      return ";";
+    case TokenType::COLON:
+      return ":";
+    case TokenType::SLASH:
+      return "/";
+    case TokenType::STAR:
+      return "*";
+    case TokenType::BANG:
+      return "!";
+    case TokenType::BANG_EQUAL:
+      return "!=";
+    case TokenType::EQUAL:
+      return "=";
+    case TokenType::EQUAL_EQUAL:
+      return "==";
+    case TokenType::GREATER:
+      return ">";
+    case TokenType::GREATER_EQUAL:
+      return ">=";
+    case TokenType::LESS:
+      return "<";
+    case TokenType::LESS_EQUAL:
+      return "<=";
+    case TokenType::IDENTIFIER:
+      return "IDENT";
+    case TokenType::STRING:
+      return "STRING";
+    case TokenType::INTEGER:
+      return "INTEGER";
+    case TokenType::DOUBLE:
+      return "DOUBLE";
+    case TokenType::BOOL:
+      return "BOOL";
+    case TokenType::TYPE_STRING:
+      return "string";
+    case TokenType::TYPE_INTEGER:
+      return "int";
+    case TokenType::TYPE_DOUBLE:
+      return "double";
+    case TokenType::TYPE_BOOL:
+      return "bool";
+    case TokenType::INTERFACE:
+      return "interface";
+    case TokenType::STRUCT:
+      return "struct";
+    case TokenType::FN:
+      return "fn";
+    case TokenType::MUT:
+      return "mut";
+    case TokenType::LET:
+      return "let";
+    case TokenType::FOR:
+      return "for";
+    case TokenType::IN:
+      return "in";
+    case TokenType::RETURN:
+      return "return";
+    case TokenType::RETURNIF:
+      return "returnif";
+    case TokenType::IF:
+      return "if";
+    case TokenType::ELSE:
+      return "else";
+    case TokenType::OR:
+      return "or";
+    case TokenType::AND:
+      return "and";
+    case TokenType::TRUE:
+      return "true";
+    case TokenType::FALSE:
+      return "false";
+    case TokenType::NIL:
+      return "nil";
+    case TokenType::THIS:
+      return "this";
+    case TokenType::ERROR:
+      return "ERROR";
+    case TokenType::END:
+      return "END";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+TEST_CASE("Semicolon insertion tests") {
+  std::vector<SemicolonTest> semicolonTests = {
+      {"", ""},
+      {";", ";"},
+      {"foo\n", "IDENT ;"},
+      {"123\n", "INTEGER ;"},
+      {"1.2\n", "DOUBLE ;"},
+      {"\"x\"\n", "STRING ;"},
+      {"true\n", "true ;"},
+      {"false\n", "false ;"},
+      {"nil\n", "nil ;"},
+      {"this\n", "this ;"},
+      {")\n", ") ;"},
+      {"}\n", "} ;"},
+      {"+\n", "+"},
+      {"-\n", "-"},
+      {"*\n", "*"},
+      {"/\n", "/"},
+      {"and\n", "and"},
+      {"bool\n", "bool"},
+      {"double\n", "double"},
+      {"else\n", "else"},
+      {"fn\n", "fn"},
+      {"in\n", "in"},
+      {"interface\n", "interface"},
+      {"struct\n", "struct"},
+      {"returnif\n", "returnif"},
+      {"if\n", "if"},
+      {"let\n", "let"},
+      {"or\n", "or"},
+  };
+
+  for (const auto& test : semicolonTests) {
+    Tokenizer tokenizer(test.input);
+    std::string actualTokens;
+    std::unique_ptr<Token> token;
+
+    do {
+      token = std::make_unique<Token>(tokenizer.scanToken());
+      if (token->type != TokenType::END) {
+        actualTokens += tokenTypeToString(token->type);
+        actualTokens += " ";
+      }
+    } while (token->type != TokenType::END);
+
+    if (!actualTokens.empty()) {
+      actualTokens.pop_back();
+    }
+
+    REQUIRE(actualTokens == test.expectedTokens);
+  }
+}
+
+TEST_CASE("More complex code is tokenized correctly", "[tokenizer]") {
   SECTION("keyword interface") {
     Tokenizer sut("interface Interface {}");
 

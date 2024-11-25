@@ -214,7 +214,7 @@ Token Tokenizer::scanToken() {
       case TokenType::FALSE:
       case TokenType::RETURN:
       case TokenType::NIL:
-      case TokenType::RETURNIF:
+      case TokenType::THIS: // crash cause TODO
         insertSemicolon = true;
         break;
       default:
