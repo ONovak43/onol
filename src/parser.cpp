@@ -284,11 +284,11 @@ bool Parser::parse(std::string_view sourceCode,
       break;
     } catch (const std::exception& ex) {
       errored = true;
+      std::cerr << ex.what() << "\n";
       if (current && current->type == TokenType::END) {
         break;
       }
       synchronize();
-      std::cerr << ex.what() << "\n";
     }
   }
   return !hadError();
