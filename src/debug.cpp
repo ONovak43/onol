@@ -32,15 +32,15 @@ static std::size_t constantLongInstruction(const std::string& name, Bytecode& by
   return offset + 4;
 }
 
-void dissasembleBytecode(Bytecode& bytecode, const std::string& name) {
+void disassembleBytecode(Bytecode& bytecode, const std::string& name) {
   std::cout << "== " << name << " ==\n";
 
   for (std::size_t offset = 0; offset < bytecode.count();) {
-    offset = dissasembleInstruction(bytecode, offset);
+    offset = disassembleInstruction(bytecode, offset);
   }
 }
 
-int dissasembleInstruction(Bytecode& bytecode, uint32_t offset) {
+int disassembleInstruction(Bytecode& bytecode, uint32_t offset) {
   std::cout << std::setfill('0') << std::setw(4) << std::right << offset << " ";
 
   if (offset > 0 && bytecode.getLine(offset) == bytecode.getLine(offset - 1)) {
@@ -53,22 +53,22 @@ int dissasembleInstruction(Bytecode& bytecode, uint32_t offset) {
 
   OpCode opCode = bytecode.getOpCode(offset);
   switch (opCode) {
-    case OpCode::OP_CONSTANT:
-      return constantInstruction("OP_CONSTANT", bytecode, offset);
-    case OpCode::OP_CONSTANT_LONG:
-      return constantLongInstruction("OP_CONSTANT_LONG", bytecode, offset);
-    case OpCode::OP_ADD:
-    return simpleInstruction("OP_ADD", offset);
-    case OpCode::OP_SUBTRACT:
-    return simpleInstruction("OP_SUBTRACT", offset);
-    case OpCode::OP_MULTIPLY:
-    return simpleInstruction("OP_MULTIPLY", offset);
-    case OpCode::OP_DIVIDE:
-    return simpleInstruction("OP_DIVIDE", offset);
-    case OpCode::OP_NEGATE:
-      return simpleInstruction("OP_NEGATE", offset);
-    case OpCode::OP_RETURN:
-      return simpleInstruction(std::string("OP_RETURN"), offset);
+    case OpCode::CONSTANT:
+      return constantInstruction("CONSTANT", bytecode, offset);
+    case OpCode::CONSTANT_LONG:
+      return constantLongInstruction("CONSTANT_LONG", bytecode, offset);
+    case OpCode::ADD:
+    return simpleInstruction("ADD", offset);
+    case OpCode::SUBTRACT:
+    return simpleInstruction("SUBTRACT", offset);
+    case OpCode::MULTIPLY:
+    return simpleInstruction("MULTIPLY", offset);
+    case OpCode::DIVIDE:
+    return simpleInstruction("DIVIDE", offset);
+    case OpCode::NEGATE:
+      return simpleInstruction("NEGATE", offset);
+    case OpCode::RETURN:
+      return simpleInstruction(std::string("RETURN"), offset);
     default:
       std::cout << "Unkown opcode " << static_cast<uint8_t>(opCode) << "\n";
       return offset + 1;

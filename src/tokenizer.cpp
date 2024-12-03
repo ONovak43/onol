@@ -22,10 +22,16 @@ static T parseNumericLiteral(std::string_view lexeme, int line) {
       std::from_chars(lexeme.data(), lexeme.data() + lexeme.size(), literal);
   if (result.ec == std::errc()) {
     return literal;
+  } else if (result.ec == std::errc::invalid_argument) {
+    throw ScanError(line,
+                    "Invalid numeric value. Lexeme: " + std::string(lexeme));
+  } else if (result.ec == std::errc::result_out_of_range) {
+    throw ScanError(
+        line, "Numeric value is out of range for the target type. Lexeme: " +
+                  std::string(lexeme));
   } else {
-    throw std::runtime_error("Unexpected numeric value. Line " +
-                             std::to_string(line) +
-                             " lexeme: " + std::string(lexeme));
+    throw ScanError(line, "Unknown error parsing numeric value. Lexeme: " +
+                              std::string(lexeme));
   }
 }
 
@@ -43,7 +49,8 @@ Token Tokenizer::makeToken(TokenType type) {
   return Token(line, type, lexeme);
 }
 
-Token Tokenizer::makeToken(std::size_t line, TokenType type, std::string_view lexeme) {
+Token Tokenizer::makeToken(std::size_t line, TokenType type,
+                           std::string_view lexeme) {
   previousTokenType = type;
   return Token(line, type, lexeme);
 }
@@ -117,7 +124,8 @@ Token Tokenizer::string() {
 
   next();
   std::string_view lexeme = source.substr(start, current - start);
-  std::string_view literal = source.substr(start + 1, current - start - 2); // remove "
+  std::string_view literal =
+      source.substr(start + 1, current - start - 2);  // remove "
   return makeToken(TokenType::STRING, lexeme, std::string(literal));
 }
 
@@ -138,11 +146,11 @@ Token Tokenizer::number() {
 
   std::string_view lexeme = source.substr(start, current - start);
   if (isDouble) {
-  return makeToken(TokenType::DOUBLE, lexeme,
-                   parseNumericLiteral<double>(lexeme, line));
+    return makeToken(TokenType::DOUBLE, lexeme,
+                     parseNumericLiteral<double>(lexeme, line));
   } else {
-      return makeToken(TokenType::INTEGER, lexeme,
-                   parseNumericLiteral<int32_t>(lexeme, line));
+    return makeToken(TokenType::INTEGER, lexeme,
+                     parseNumericLiteral<int32_t>(lexeme, line));
   }
 }
 
@@ -214,7 +222,7 @@ Token Tokenizer::scanToken() {
       case TokenType::FALSE:
       case TokenType::RETURN:
       case TokenType::NIL:
-      case TokenType::THIS: // crash cause TODO
+      case TokenType::THIS:
         insertSemicolon = true;
         break;
       default:

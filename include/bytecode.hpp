@@ -9,14 +9,14 @@
 #include "types.hpp"
 
 enum class OpCode : uint8_t {
-  OP_CONSTANT,
-  OP_CONSTANT_LONG,
-  OP_ADD,
-  OP_SUBTRACT,
-  OP_MULTIPLY,
-  OP_DIVIDE,
-  OP_NEGATE,
-  OP_RETURN
+  CONSTANT,
+  CONSTANT_LONG,
+  ADD,
+  SUBTRACT,
+  MULTIPLY,
+  DIVIDE,
+  NEGATE,
+  RETURN
 };
 
 class Bytecode {
@@ -32,7 +32,6 @@ class Bytecode {
   void addLine(uint32_t line);
 
  public:
-  Bytecode() = default;
   void putRaw(uint8_t byte, uint32_t line);
   void putOpCode(OpCode byte, uint32_t line);
   std::size_t putConstant(Type value, uint32_t line);

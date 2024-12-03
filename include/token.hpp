@@ -57,7 +57,9 @@ enum class TokenType {
   THIS,
 
   ERROR,
-  END
+  END,
+
+  TOKEN_COUNT
 };
 
 class Token {

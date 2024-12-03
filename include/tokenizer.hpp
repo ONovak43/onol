@@ -1,9 +1,36 @@
 #pragma once
 
+#include <sstream>
 #include <string_view>
 
 #include "token.hpp"
 #include "types.hpp"
+
+class ScanError : public std::exception {
+ private:
+  uint32_t line;
+  std::string message;
+  std::string formattedMessage;
+
+ public:
+  ScanError() = delete;
+  ScanError(uint32_t line, const std::string& msg) : line(line), message(msg) {
+    std::ostringstream oss;
+    oss << "[line " << line << "] Error: " << message;
+    formattedMessage = oss.str();
+  }
+
+  virtual const char* what() const noexcept override {
+    return formattedMessage.c_str();
+  }
+
+  uint32_t getLine() const noexcept {
+    return line;
+  }
+  const std::string& getMessage() const noexcept {
+    return message;
+  }
+};
 
 class Tokenizer {
  private:
@@ -20,23 +47,19 @@ class Tokenizer {
   Token makeToken(std::size_t line, TokenType type, std::string_view lexeme);
   Token makeToken(TokenType type, std::string_view lexeme, const Type& literal);
   Token errorToken(const std::string& msg);
-  bool isWhitespaceEndStatement();
-  bool handleNewLine();
   void skipWhitespace();
   bool shouldInsertSemicolon();
   Token string();
   Token number();
   Token identifier();
-  TokenType identifierType();
-  TokenType checkKeyword(std::size_t start, std::size_t length,
-                         const std::string& rest, TokenType type);
+
   char next();
   bool match(char expected);
   char peek();
   char peekNext();
 
  public:
-  Tokenizer(std::string_view sourceCode) : source(sourceCode) {
+  explicit Tokenizer(std::string_view sourceCode) : source(sourceCode) {
   }
 
   Token scanToken();

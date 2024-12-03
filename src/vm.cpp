@@ -2,12 +2,13 @@
 
 #include <cstdint>
 #include <functional>
+#include <iostream>
+#include <memory>
 #include <variant>
 
 #include "bytecode.hpp"
 #include "debug.hpp"
 #include "types.hpp"
-#include <iostream>
 
 Type VM::pop() {
   Type stackValue = stack.back();
@@ -20,8 +21,19 @@ void VM::push(Type value) {
 }
 
 InterpretResult VM::interpret(const std::string& sourceCode) {
-  compiler.compile(sourceCode);
-  return InterpretResult::INTERPRET_OK;
+  bytecode = std::make_shared<Bytecode>();
+
+  if (!parser.parse(sourceCode, bytecode)) {
+    bytecode->free();
+    return InterpretResult::INTERPRET_COMPILE_ERROR;
+  }
+
+  ip = bytecode->getCodePointer();
+  InterpretResult result;
+
+  result = run();
+
+  return result;
 }
 
 InterpretResult VM::run() {
@@ -34,16 +46,16 @@ InterpretResult VM::run() {
       std::cout << " ]";
     }
     std::cout << "\n";
-    dissasembleInstruction(*bytecode, (ip - bytecode->getCodePointer()));
+    disassembleInstruction(*bytecode, (ip - bytecode->getCodePointer()));
 #endif
     uint8_t instruction = readByte();
     switch (static_cast<OpCode>(instruction)) {
-      case OpCode::OP_CONSTANT: {
+      case OpCode::CONSTANT: {
         Type constant = readConstant();
         push(constant);
         break;
       }
-      case OpCode::OP_CONSTANT_LONG: {
+      case OpCode::CONSTANT_LONG: {
         uint32_t constantAddr = 0;
         constantAddr |= readByte();
         constantAddr |= readByte() << 8;
@@ -54,35 +66,36 @@ InterpretResult VM::run() {
         std::cout << "\n";
         break;
       }
-      case OpCode::OP_ADD: {
+      case OpCode::ADD: {
         binaryOp(std::plus<>());
         break;
       }
-      case OpCode::OP_SUBTRACT: {
+      case OpCode::SUBTRACT: {
         binaryOp(std::minus<>());
         break;
       }
-      case OpCode::OP_MULTIPLY: {
+      case OpCode::MULTIPLY: {
         binaryOp(std::multiplies<>());
         break;
       }
-      case OpCode::OP_DIVIDE: {
+      case OpCode::DIVIDE: {
         binaryOp(std::divides<>());
         break;
       }
-      case OpCode::OP_NEGATE: {
+      case OpCode::NEGATE: {
         Type value = pop();
         std::visit(
             [this](auto&& arg) {
               using T = std::decay_t<decltype(arg)>;
-              if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, double>) {
+              if constexpr (std::is_same_v<T, int32_t> ||
+                            std::is_same_v<T, double>) {
                 push(-arg);
               }
             },
             value);  // TODO fix unsupported types
         break;
       }
-      case OpCode::OP_RETURN: {
+      case OpCode::RETURN: {
         printValue(pop());
         std::cout << "\n";
         return InterpretResult::INTERPRET_OK;

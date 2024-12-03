@@ -6,18 +6,18 @@
 TEST_CASE("Bytecode basic operations", "[bytecode]") {
   SECTION("An instruction is added to the bytecode with the correct line") {
     Bytecode bytecode;
-    OpCode instruction = OpCode::OP_RETURN;
+    OpCode instruction = OpCode::RETURN;
 
     bytecode.putOpCode(instruction, 10);
 
     REQUIRE(bytecode.count() == 1);
-    REQUIRE(bytecode.getOpCode(0) == OpCode::OP_RETURN);
+    REQUIRE(bytecode.getOpCode(0) == OpCode::RETURN);
     REQUIRE(bytecode.getLine(0) == 10);
   }
 
   SECTION("When Bytecode is freed, it becomes empty") {
     Bytecode bytecode;
-    OpCode instruction = OpCode::OP_RETURN;
+    OpCode instruction = OpCode::RETURN;
     bytecode.putOpCode(instruction, 1);
 
     bytecode.free();
@@ -29,7 +29,7 @@ TEST_CASE("Bytecode basic operations", "[bytecode]") {
 TEST_CASE("Bytecode getLine operations", "[bytecode]") {
   SECTION("Getting correct line for a single instruction") {
     Bytecode bytecode;
-    OpCode instruction = OpCode::OP_RETURN;
+    OpCode instruction = OpCode::RETURN;
 
     bytecode.putOpCode(instruction, 5);
 
@@ -39,10 +39,10 @@ TEST_CASE("Bytecode getLine operations", "[bytecode]") {
   SECTION("Getting correct line for multiple instructions") {
     Bytecode bytecode;
 
-    bytecode.putOpCode(OpCode::OP_RETURN, 5);
-    bytecode.putOpCode(OpCode::OP_RETURN, 5);
-    bytecode.putOpCode(OpCode::OP_RETURN, 10);
-    bytecode.putOpCode(OpCode::OP_RETURN, 15);
+    bytecode.putOpCode(OpCode::RETURN, 5);
+    bytecode.putOpCode(OpCode::RETURN, 5);
+    bytecode.putOpCode(OpCode::RETURN, 10);
+    bytecode.putOpCode(OpCode::RETURN, 15);
 
     REQUIRE(bytecode.getLine(0) == 5);
     REQUIRE(bytecode.getLine(1) == 5);
@@ -82,7 +82,7 @@ TEST_CASE("Bytecode constant operations", "[bytecode]") {
 }
 
 TEST_CASE("Bytecode instruction tests", "[bytecode]") {
-  SECTION("Adding OP_CONSTANT and OP_CONSTANT_LONG instructions") {
+  SECTION("Adding CONSTANT and CONSTANT_LONG instructions") {
     Bytecode bytecode;
     Type valueInt = 10;
     Type valueStr = "test";
@@ -92,7 +92,7 @@ TEST_CASE("Bytecode instruction tests", "[bytecode]") {
     std::size_t address1 = bytecode.putConstant(valueInt, line1);
     std::size_t address2 = bytecode.putConstant(valueStr, line2);
 
-    REQUIRE(bytecode.getOpCode(0) == OpCode::OP_CONSTANT);
+    REQUIRE(bytecode.getOpCode(0) == OpCode::CONSTANT);
     REQUIRE(bytecode.getConstantAddress(1) == address1);
     REQUIRE(bytecode.getLine(0) == line1);
 
@@ -100,7 +100,7 @@ TEST_CASE("Bytecode instruction tests", "[bytecode]") {
       bytecode.putConstant(110, line2);
     }
     std::size_t addressLong = bytecode.putConstant(valueStr, line2);
-    REQUIRE(bytecode.getOpCode(696) == OpCode::OP_CONSTANT_LONG);
+    REQUIRE(bytecode.getOpCode(696) == OpCode::CONSTANT_LONG);
     CHECK(bytecode.getLine(696) == line2);
   }
 }

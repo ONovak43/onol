@@ -20,14 +20,14 @@ target_include_directories(Onol PUBLIC "${PROJECT_SOURCE_DIR}/include")
 if(MSVC)
     target_compile_options(Onol PRIVATE /W4)
 else()
-    target_compile_options(Onol PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(Onol PRIVATE -Wall -Wextra -pedantic)
 endif()
 
 set(CMAKE_BUILD_TYPE Debug)
 
 find_package(Catch2 3 REQUIRED)
 
-add_executable(tests tests/test_allocator.cpp src/allocator.cpp tests/test_bytecode.cpp src/bytecode.cpp tests/test_tokenizer.cpp src/tokenizer.cpp src/token.cpp)
+add_executable(tests tests/test_allocator.cpp src/allocator.cpp tests/test_bytecode.cpp src/bytecode.cpp tests/test_tokenizer.cpp src/tokenizer.cpp src/token.cpp tests/test_parser.cpp src/parser.cpp src/debug.cpp src/types.cpp)
 target_include_directories(tests PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 

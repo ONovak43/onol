@@ -29,10 +29,10 @@ std::size_t Bytecode::putConstant(Type value, uint32_t line) {
 
   std::size_t constantAddress = constantPool.size() - 1;
   if (constantAddress < 256) {
-    putRaw(static_cast<uint8_t>(OpCode::OP_CONSTANT), line);
+    putRaw(static_cast<uint8_t>(OpCode::CONSTANT), line);
     putRaw(constantAddress, line);
   } else {
-    putRaw(static_cast<uint8_t>(OpCode::OP_CONSTANT_LONG), line);
+    putRaw(static_cast<uint8_t>(OpCode::CONSTANT_LONG), line);
     putRaw(static_cast<uint8_t>(constantAddress & 0xff), line);  // little-endian
     putRaw(static_cast<uint8_t>((constantAddress >> 8) & 0xff), line);
     putRaw(static_cast<uint8_t>((constantAddress >> 16) & 0xff), line);

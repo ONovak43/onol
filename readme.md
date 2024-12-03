@@ -95,3 +95,4 @@
 - true
 - false
 - nil
+- this

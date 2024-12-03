@@ -45,7 +45,6 @@ static void runFile(const char* path) {
 }
 
 int main(int argc, const char* argv[]) {
-
   if (argc == 1) {
     repl();
   } else if (argc == 2) {
