@@ -1,18 +1,28 @@
 #pragma once
 
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <string>
 
 #include "allocator.hpp"
+
+using String = std::basic_string<char, std::char_traits<char>, Allocator<char>>;
+
+namespace std {
+template <>
+struct hash<String> {
+  std::size_t operator()(const String& s) const noexcept {
+    return std::hash<std::string_view>()(std::string_view(s.data(), s.size()));
+  }
+};
+} 
 
 struct Object {
   virtual ~Object() = default;
   virtual std::string toString() const = 0;
   virtual bool operator==(const Object& other) const = 0;
 };
-
-using String = std::basic_string<char, std::char_traits<char>, Allocator<char>>;
 
 struct ObjString : Object {
   String value;
@@ -27,10 +37,6 @@ struct ObjString : Object {
   }
 
   ObjString(const char* cstr) : value(cstr, cstr + std::strlen(cstr)) {
-  }
-
-  ~ObjString() {
-    std::cout << "ObjStringdestructor" << "\n";
   }
 
   std::string toString() const override {
@@ -48,5 +54,3 @@ struct ObjString : Object {
     return false;
   }
 };
-
-bool areEqual(const Object* lhs, const Object* rhs);

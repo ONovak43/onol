@@ -23,21 +23,6 @@ static bool valuesEqual(Type a, Type b) {
         if constexpr (std::is_same_v<T1, T2>) {
           if constexpr (std::is_same_v<T1, Null>) {
             return true;
-          } else if constexpr (std::is_pointer_v<T1> &&
-                               std::is_base_of_v<Object,
-                                                 std::remove_pointer_t<T1>>) {
-            if (!argA || !argB) {
-              return false;
-            }
-
-            auto objStringA = dynamic_cast<ObjString*>(argA);
-            auto objStringB = dynamic_cast<ObjString*>(argB);
-
-            if (objStringA && objStringB) {
-              return objStringA->value == objStringB->value;
-            }
-
-            return false;
           } else {
             return argA == argB;
           }
@@ -97,6 +82,7 @@ VM::~VM() {
     }
   }
   objects.clear();
+  clearInternedStrings();
 }
 
 InterpretResult VM::interpret(const std::string& sourceCode) {

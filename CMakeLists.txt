@@ -41,7 +41,7 @@ add_executable(
     src/parser.cpp 
     src/debug.cpp 
     src/types.cpp
-    src/dynamic_types.cpp
+    src/interned_strings.cpp
 )
 target_include_directories(tests PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)

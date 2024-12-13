@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <memory>
 
 void *reallocate(void *pointer, [[maybe_unused]] size_t oldSize,
                  size_t newSize);

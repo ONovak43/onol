@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "allocator.hpp"
+#include "interned_strings.hpp"
 #include "token.hpp"
 
 static bool isDigit(char ch) {
@@ -128,9 +129,9 @@ Token Tokenizer::string() {
   std::string_view literal =
       source.substr(start + 1, current - start - 2);  // remove "
 
-  ObjString* objStr = allocateAndConstruct<ObjString>(literal);
+  ObjString* interned = getOrIntern(literal);
 
-  return makeToken(TokenType::STRING, lexeme, objStr);
+  return makeToken(TokenType::STRING, lexeme, interned);
 }
 
 Token Tokenizer::number() {

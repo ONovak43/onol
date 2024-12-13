@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "bytecode.hpp"
+#include "interned_strings.hpp"
 #include "parser.hpp"
 #include "types.hpp"
 
@@ -29,7 +30,8 @@ class VM {
   uint8_t* ip;
   std::deque<Type> stack;
   Parser parser;
-  std::vector<Object*> objects;
+  std::vector<Object*, Allocator<Object*>> objects;
+  std::unordered_map<String, ObjString*> internedStrings;
 
   Type pop();
   void push(Type value);
@@ -72,9 +74,8 @@ class VM {
             String result(lhsStr.begin(), lhsStr.end(), Allocator<char>());
             result.append(rhsStr.begin(), rhsStr.end());
 
-            ObjString* objStr = allocateObject<ObjString>(std::move(result));
-
-            push(objStr);
+            auto interned = getOrIntern(result);
+            push(interned);
           } else {
             throw RuntimeError(bytecode->getLine(currentInstructionAddress()),
                                "Operator plus is not supported for this type.");
