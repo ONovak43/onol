@@ -12,9 +12,29 @@ void skipTokens(Tokenizer& tokenizer, int count) {
   }
 }
 
+bool compareTypes(const Type& lhs, const Type& rhs) {
+  return std::visit(
+      [](auto&& left, auto&& right) -> bool {
+        using L = std::decay_t<decltype(left)>;
+        using R = std::decay_t<decltype(right)>;
+
+        if constexpr (std::is_same_v<L, R>) {
+          if constexpr (std::is_same_v<L, Object*>) {
+            if (!left || !right) return left == right;
+            return *left == *right;
+          } else {
+            return left == right;
+          }
+        }
+        return false;
+      },
+      lhs, rhs);
+}
+
 std::vector<Token> tokens = {
     {1, TokenType::STRING, "\"Hello, World!\"",
-     std::make_optional<Type>(allocateAndConstruct<ObjString>("Hello, World!"))},
+     std::make_optional<Type>(
+         allocateAndConstruct<ObjString>("Hello, World!"))},
     {2, TokenType::INTEGER, "123", std::make_optional<Type>(123)},
     {3, TokenType::DOUBLE, "3.1415", std::make_optional<Type>(3.1415)},
     {4, TokenType::NUL, "nil"},
@@ -91,7 +111,12 @@ TEST_CASE("Tokenizer correctly scans tokens") {
     CHECK(expected.line == token->line);
     CHECK(expected.type == token->type);
     CHECK(expected.lexeme == token->lexeme);
-    CHECK(expected.literal == token->literal);
+    if (expected.literal && token->literal) {
+      CHECK(compareTypes(expected.literal.value(), token->literal.value()));
+    } else {
+      CHECK(!expected.literal);
+      CHECK(!token->literal);
+    }
   }
 }
 

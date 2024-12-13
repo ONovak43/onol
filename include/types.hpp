@@ -11,7 +11,7 @@ struct Null {
 };
 
 
-using Type = std::variant<Null, int32_t, double, bool, Object*>;
+using Type = std::variant<Null, int32_t, double, bool, Object*>; // TODO check Object maybe causes memory leak (for containers)
 
 void printValue(const Type& value);
 bool isObjType(const Type& value, const std::type_info& type);

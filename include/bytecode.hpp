@@ -36,7 +36,7 @@ class Bytecode {
     uint32_t line;
   };
 
-  std::vector<std::uint8_t> code;
+  std::vector<std::uint8_t, Allocator<std::uint8_t>> code;
   std::vector<Type, Allocator<Type>> constantPool;
   std::vector<std::unique_ptr<LineStart>> lines;
   void addLine(uint32_t line);
@@ -52,8 +52,4 @@ class Bytecode {
   uint32_t getLine(std::size_t address);
   uint8_t* getCodePointer();
   std::size_t count();
-
-  virtual ~Bytecode() {
-    std::cout << "destructor" << "\n";
-  }
 };

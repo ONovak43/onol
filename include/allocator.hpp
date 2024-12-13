@@ -26,7 +26,7 @@ struct Allocator {
     return ptr;
   }
 
-  void destroy(T *ptr) {
+  void destroyPtr(T *ptr) {
     if (ptr) {
       ptr->~T();
       deallocate(ptr, 1);
@@ -66,5 +66,5 @@ T *allocateAndConstruct(Args &&...args) {
 template <typename T>
 void destructAndDeallocate(T *ptr) {
   Allocator<T> alloc;
-  alloc.destroy(ptr);
+  alloc.destroyPtr(ptr);
 }
