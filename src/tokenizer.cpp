@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string_view>
 
+#include "allocator.hpp"
 #include "token.hpp"
 
 static bool isDigit(char ch) {
@@ -126,7 +127,10 @@ Token Tokenizer::string() {
   std::string_view lexeme = source.substr(start, current - start);
   std::string_view literal =
       source.substr(start + 1, current - start - 2);  // remove "
-  return makeToken(TokenType::STRING, lexeme, std::string(literal));
+
+  ObjString* objStr = allocateAndConstruct<ObjString>(literal);
+
+  return makeToken(TokenType::STRING, lexeme, objStr);
 }
 
 Token Tokenizer::number() {
@@ -221,7 +225,7 @@ Token Tokenizer::scanToken() {
       case TokenType::TRUE:
       case TokenType::FALSE:
       case TokenType::RETURN:
-      case TokenType::NIL:
+      case TokenType::NUL:
       case TokenType::THIS:
         insertSemicolon = true;
         break;

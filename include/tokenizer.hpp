@@ -3,32 +3,15 @@
 #include <sstream>
 #include <string_view>
 
+#include "interpreter_error.hpp"
 #include "token.hpp"
 #include "types.hpp"
 
-class ScanError : public std::exception {
- private:
-  uint32_t line;
-  std::string message;
-  std::string formattedMessage;
-
+class ScanError : public InterpreterError {
  public:
   ScanError() = delete;
-  ScanError(uint32_t line, const std::string& msg) : line(line), message(msg) {
-    std::ostringstream oss;
-    oss << "[line " << line << "] Error: " << message;
-    formattedMessage = oss.str();
-  }
-
-  virtual const char* what() const noexcept override {
-    return formattedMessage.c_str();
-  }
-
-  uint32_t getLine() const noexcept {
-    return line;
-  }
-  const std::string& getMessage() const noexcept {
-    return message;
+  ScanError(uint32_t line, const std::string& msg)
+      : InterpreterError(line, msg) {
   }
 };
 

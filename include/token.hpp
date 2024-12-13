@@ -32,7 +32,6 @@ enum class TokenType {
   STRING,
   INTEGER,
   DOUBLE,
-  BOOL,
   TYPE_STRING,
   TYPE_INTEGER,
   TYPE_DOUBLE,
@@ -53,7 +52,7 @@ enum class TokenType {
   AND,
   TRUE,
   FALSE,
-  NIL,
+  NUL,
   THIS,
 
   ERROR,

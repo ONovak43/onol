@@ -6,26 +6,33 @@
 #include "bytecode.hpp"
 #include "types.hpp"
 
-static std::size_t simpleInstruction(const std::string& name, std::size_t offset) {
+static std::size_t simpleInstruction(const std::string& name,
+                                     std::size_t offset) {
   std::cout << name << "\n";
   return offset + 1;
 }
 
-static std::size_t constantInstruction(const std::string& name, Bytecode& bytecode, std::size_t offset) {
+static std::size_t constantInstruction(const std::string& name,
+                                       Bytecode& bytecode, std::size_t offset) {
   uint8_t constantAddress = bytecode.getConstantAddress(offset + 1);
 
-  std::cout << std::left << std::setw(16) << name << std::setw(4) << static_cast<int>(constantAddress) << "'";
+  std::cout << std::left << std::setw(16) << name << std::setw(4)
+            << static_cast<int>(constantAddress) << "'";
   std::cout << std::setfill(' ') << std::setw(0);
   printValue(bytecode.getConstant(constantAddress));
   std::cout << "'" << "\n";
   return offset + 2;
 }
 
-static std::size_t constantLongInstruction(const std::string& name, Bytecode& bytecode, std::size_t offset) {
-  uint32_t constantAddress = bytecode.getConstantAddress(offset + 1) | (bytecode.getConstantAddress(offset + 2) << 8) |
+static std::size_t constantLongInstruction(const std::string& name,
+                                           Bytecode& bytecode,
+                                           std::size_t offset) {
+  uint32_t constantAddress = bytecode.getConstantAddress(offset + 1) |
+                             (bytecode.getConstantAddress(offset + 2) << 8) |
                              (bytecode.getConstantAddress(offset + 3) << 16);
 
-  std::cout << std::left << std::setw(16) << name << std::setw(4) << static_cast<int>(constantAddress) << "'";
+  std::cout << std::left << std::setw(16) << name << std::setw(4)
+            << static_cast<int>(constantAddress) << "'";
   std::cout << std::setfill(' ') << std::setw(0);
   printValue(bytecode.getConstant(constantAddress));
   std::cout << "'" << "\n";
@@ -57,16 +64,36 @@ int disassembleInstruction(Bytecode& bytecode, uint32_t offset) {
       return constantInstruction("CONSTANT", bytecode, offset);
     case OpCode::CONSTANT_LONG:
       return constantLongInstruction("CONSTANT_LONG", bytecode, offset);
+    case OpCode::FALSE:
+      return simpleInstruction(std::string("FALSE"), offset);
+    case OpCode::TRUE:
+      return simpleInstruction(std::string("TRUE"), offset);
+    case OpCode::NUL:
+      return simpleInstruction(std::string("NULL"), offset);
     case OpCode::ADD:
-    return simpleInstruction("ADD", offset);
+      return simpleInstruction("ADD", offset);
     case OpCode::SUBTRACT:
-    return simpleInstruction("SUBTRACT", offset);
+      return simpleInstruction("SUBTRACT", offset);
     case OpCode::MULTIPLY:
-    return simpleInstruction("MULTIPLY", offset);
+      return simpleInstruction("MULTIPLY", offset);
     case OpCode::DIVIDE:
-    return simpleInstruction("DIVIDE", offset);
+      return simpleInstruction("DIVIDE", offset);
     case OpCode::NEGATE:
       return simpleInstruction("NEGATE", offset);
+    case OpCode::NOT:
+      return simpleInstruction("NOT", offset);
+    case OpCode::EQUAL:
+      return simpleInstruction("EQUAL", offset);
+    case OpCode::GREATER:
+      return simpleInstruction("GREATER", offset);
+    case OpCode::GREATER_EQUAL:
+      return simpleInstruction("GREATER_EQUAL", offset);
+    case OpCode::LESS:
+      return simpleInstruction("LESS", offset);
+    case OpCode::LESS_EQUAL:
+      return simpleInstruction("LESS_EQUAL", offset);
+    case OpCode::NOT_EQUAL:
+      return simpleInstruction("NOT_EQUAL", offset);
     case OpCode::RETURN:
       return simpleInstruction(std::string("RETURN"), offset);
     default:

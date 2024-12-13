@@ -14,7 +14,7 @@ std::unordered_map<std::string, TokenType> Token::keywords = {
     {"if", TokenType::IF},
     {"let", TokenType::LET},
     {"mut", TokenType::MUT},
-    {"nil", TokenType::NIL},
+    {"nil", TokenType::NUL},
     {"or", TokenType::OR},
     {"return", TokenType::RETURN},
     {"returnif", TokenType::RETURNIF},

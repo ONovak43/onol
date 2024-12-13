@@ -2,6 +2,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
+#include "allocator.hpp"
+#include "dynamic_types.hpp"
 #include "tokenizer.hpp"
 
 void skipTokens(Tokenizer& tokenizer, int count) {
@@ -12,10 +14,10 @@ void skipTokens(Tokenizer& tokenizer, int count) {
 
 std::vector<Token> tokens = {
     {1, TokenType::STRING, "\"Hello, World!\"",
-     std::make_optional<Type>(std::string("Hello, World!"))},
+     std::make_optional<Type>(allocateAndConstruct<ObjString>("Hello, World!"))},
     {2, TokenType::INTEGER, "123", std::make_optional<Type>(123)},
     {3, TokenType::DOUBLE, "3.1415", std::make_optional<Type>(3.1415)},
-    {4, TokenType::NIL, "nil"},
+    {4, TokenType::NUL, "nil"},
 
     {5, TokenType::PLUS, "+"},
     {6, TokenType::MINUS, "-"},
@@ -58,7 +60,7 @@ std::vector<Token> tokens = {
     {42, TokenType::TRUE, "true", std::make_optional<Type>(true)},
     {43, TokenType::FALSE, "false", std::make_optional<Type>(false)},
     {44, TokenType::THIS, "this"},
-    {45, TokenType::NIL, "nil"}};
+    {45, TokenType::NUL, "nil"}};
 
 std::string whitespace = " \t\n";
 
@@ -148,8 +150,6 @@ std::string tokenTypeToString(TokenType type) {
       return "INTEGER";
     case TokenType::DOUBLE:
       return "DOUBLE";
-    case TokenType::BOOL:
-      return "BOOL";
     case TokenType::TYPE_STRING:
       return "string";
     case TokenType::TYPE_INTEGER:
@@ -188,7 +188,7 @@ std::string tokenTypeToString(TokenType type) {
       return "true";
     case TokenType::FALSE:
       return "false";
-    case TokenType::NIL:
+    case TokenType::NUL:
       return "nil";
     case TokenType::THIS:
       return "this";

@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "bytecode.hpp"
+#include "interpreter_error.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
 
@@ -35,30 +36,11 @@ struct ParseRule {
   Precedence precedence;
 };
 
-class ParseError : public std::exception {
- private:
-  uint32_t line;
-  std::string message;
-  std::string formattedMessage; 
-
+class ParseError : public InterpreterError {
  public:
   ParseError() = delete;
   ParseError(uint32_t line, const std::string& msg)
-      : line(line), message(msg) {
-    std::ostringstream oss;
-    oss << "[line " << line << "] Error: " << message;
-    formattedMessage = oss.str(); 
-  }
-
-  virtual const char* what() const noexcept override {
-    return formattedMessage.c_str();
-  }
-
-  uint32_t getLine() const noexcept {
-    return line;
-  }
-  const std::string& getMessage() const noexcept {
-    return message;
+      : InterpreterError(line, msg) {
   }
 };
 
@@ -75,6 +57,9 @@ class Parser {
   void binary();
   void unary();
   void number();
+  void string();
+  void literal();
+
   void next();
 
   bool hadError();

@@ -10,6 +10,42 @@
 #include "debug.hpp"
 #include "types.hpp"
 
+static bool valuesEqual(Type a, Type b) {
+  if (!isSameType(a, b)) {
+    return false;
+  }
+
+  return std::visit(
+      [](auto&& argA, auto&& argB) -> bool {
+        using T1 = std::decay_t<decltype(argA)>;
+        using T2 = std::decay_t<decltype(argB)>;
+
+        if constexpr (std::is_same_v<T1, T2>) {
+          if constexpr (std::is_same_v<T1, Null>) {
+            return true;
+          } else if constexpr (std::is_pointer_v<T1> && std::is_base_of_v<Object, std::remove_pointer_t<T1>>) {
+            if (!argA || !argB) {
+              return false;
+            }
+
+            auto objStringA = dynamic_cast<ObjString*>(argA);
+            auto objStringB = dynamic_cast<ObjString*>(argB);
+
+            if (objStringA && objStringB) {
+              return objStringA->value == objStringB->value;
+            }
+
+            return false;
+          } else {
+            return argA == argB;
+          }
+        } else {
+          return false;
+        }
+      },
+      a, b);
+}
+
 Type VM::pop() {
   Type stackValue = stack.back();
   stack.pop_back();
@@ -18,6 +54,14 @@ Type VM::pop() {
 
 void VM::push(Type value) {
   stack.push_back(value);
+}
+
+std::size_t VM::currentInstructionAddress() {
+  return ip - bytecode->getCodePointer();
+}
+
+uint32_t VM::getCurrentLine() {
+  return currentInstructionAddress() - 1;
 }
 
 InterpretResult VM::interpret(const std::string& sourceCode) {
@@ -31,7 +75,11 @@ InterpretResult VM::interpret(const std::string& sourceCode) {
   ip = bytecode->getCodePointer();
   InterpretResult result;
 
-  result = run();
+  try {
+    result = run();
+  } catch (const RuntimeError& ex) {
+    std::cerr << ex.what() << "\n";
+  }
 
   return result;
 }
@@ -46,7 +94,7 @@ InterpretResult VM::run() {
       std::cout << " ]";
     }
     std::cout << "\n";
-    disassembleInstruction(*bytecode, (ip - bytecode->getCodePointer()));
+    disassembleInstruction(*bytecode, currentInstructionAddress());
 #endif
     uint8_t instruction = readByte();
     switch (static_cast<OpCode>(instruction)) {
@@ -90,16 +138,73 @@ InterpretResult VM::run() {
               if constexpr (std::is_same_v<T, int32_t> ||
                             std::is_same_v<T, double>) {
                 push(-arg);
+              } else {
+                throw RuntimeError(getCurrentLine(),
+                                   "Operand must be a number.");
               }
             },
-            value);  // TODO fix unsupported types
+            value);
+        break;
+      }
+      case OpCode::NOT: {
+        Type val = pop();
+        if (isBool(val)) {
+          bool boolVal = asBool(val);
+          push(!boolVal);
+        } else {
+          throw RuntimeError(getCurrentLine(),
+                             "Operand must be a boolean value.");
+        }
         break;
       }
       case OpCode::RETURN: {
         printValue(pop());
         std::cout << "\n";
         return InterpretResult::INTERPRET_OK;
-      } break;
+      }
+      case OpCode::FALSE: {
+        push(false);
+        break;
+      }
+      case OpCode::TRUE: {
+        push(true);
+        break;
+      }
+      case OpCode::EQUAL: {
+        Type b = pop();
+        Type a = pop();
+        push(valuesEqual(a, b));
+        break;
+      }
+      case OpCode::GREATER: {
+        binaryOp(std::greater<>());
+        break;
+      }
+      case OpCode::GREATER_EQUAL: {
+        binaryOp(std::greater_equal<>());
+        break;
+      }
+      case OpCode::LESS: {
+        binaryOp(std::less<>());
+        break;
+      }
+      case OpCode::LESS_EQUAL: {
+        binaryOp(std::less_equal<>());
+        break;
+      }
+      case OpCode::NOT_EQUAL: {
+        Type b = pop();
+        Type a = pop();
+        push(!valuesEqual(a, b));
+        break;
+      }
+      case OpCode::NUL: {
+        push(Null{});
+        break;
+      }
+      default: {
+        break;
+      }
     }
   }
   return InterpretResult::INTERPRET_OK;

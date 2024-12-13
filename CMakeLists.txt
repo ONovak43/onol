@@ -27,7 +27,22 @@ set(CMAKE_BUILD_TYPE Debug)
 
 find_package(Catch2 3 REQUIRED)
 
-add_executable(tests tests/test_allocator.cpp src/allocator.cpp tests/test_bytecode.cpp src/bytecode.cpp tests/test_tokenizer.cpp src/tokenizer.cpp src/token.cpp tests/test_parser.cpp src/parser.cpp src/debug.cpp src/types.cpp)
+add_executable(
+    tests 
+    tests/test_allocator.cpp     
+    tests/test_bytecode.cpp     
+    tests/test_tokenizer.cpp     
+    tests/test_parser.cpp 
+    src/interpreter_error.cpp 
+    src/allocator.cpp
+    src/bytecode.cpp 
+    src/tokenizer.cpp 
+    src/token.cpp 
+    src/parser.cpp 
+    src/debug.cpp 
+    src/types.cpp
+    src/dynamic_types.cpp
+)
 target_include_directories(tests PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 

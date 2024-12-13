@@ -14,6 +14,13 @@ enum class InterpretResult {
   INTERPRET_RUNTIME_ERROR
 };
 
+class RuntimeError : public InterpreterError {
+ public:
+  RuntimeError() = delete;
+  RuntimeError(uint32_t line, const std::string& msg)
+      : InterpreterError(line, msg) {
+  }
+};
 
 class VM {
  private:
@@ -22,23 +29,35 @@ class VM {
   uint8_t* ip;
   std::deque<Type> stack;
   Parser parser;
+  std::vector<Object> objects;
 
   Type pop();
   void push(Type value);
+  std::size_t currentInstructionAddress();
+  uint32_t getCurrentLine();
 
-  std::string toString(const Type& value) {
+  String toString(const Type& value) {
     return std::visit(
-      [](auto&& arg) -> std::string {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, std::string>) {
-          return arg;
-        } else if constexpr (std::is_same_v<T, bool>) {
-          return arg ? "true" : "false";
-        } else {
-          return std::to_string(arg);
-        }
-      },
-      value);
+        [](auto&& arg) -> String {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, String>) {
+            return arg;
+          } else if constexpr (std::is_same_v<T, bool>) {
+            return arg ? "true" : "false";
+          } else if constexpr (std::is_same_v<T, Null>) {
+            return "null";
+          } else if constexpr (std::is_same_v<T, Object>) {
+            auto objStr = dynamic_cast<ObjString*>(arg);
+
+            if (objStr) {
+              return objStr->value;
+            }
+            return "object";
+          } else {
+            return "unkown";
+          }
+        },
+        value);
   }
 
   template <typename Op>
@@ -51,14 +70,30 @@ class VM {
           using LHS = std::decay_t<decltype(lhs)>;
           using RHS = std::decay_t<decltype(rhs)>;
 
-          if constexpr ((std::is_same_v<LHS, int32_t> && std::is_same_v<RHS, int32_t>) ||
-                        (std::is_same_v<LHS, double> && std::is_same_v<RHS, double>)) {
+          if constexpr ((std::is_same_v<LHS, int32_t> &&
+                         std::is_same_v<RHS, int32_t>) ||
+                        (std::is_same_v<LHS, double> &&
+                         std::is_same_v<RHS, double>)) {
             push(op(lhs, rhs));
-          } else if constexpr ((std::is_same_v<LHS, int32_t> && std::is_same_v<RHS, double>) ||
-                               (std::is_same_v<LHS, double> && std::is_same_v<RHS, int32_t>)) {
+          } else if constexpr ((std::is_same_v<LHS, int32_t> &&
+                                std::is_same_v<RHS, double>) ||
+                               (std::is_same_v<LHS, double> &&
+                                std::is_same_v<RHS, int32_t>)) {
             push(op(static_cast<double>(lhs), static_cast<double>(rhs)));
-          } else if constexpr (std::is_same_v<LHS, std::string> || std::is_same_v<RHS, std::string>) {
-            push(toString(lhs) + toString(rhs));
+          } else if constexpr (std::is_same_v<LHS, String> ||
+                               std::is_same_v<RHS, String>) {
+            String lhsStr = std::is_same_v<LHS, String> ? lhs : toString(lhs);
+            String rhsStr = std::is_same_v<RHS, String> ? rhs : toString(rhs);
+
+            String result(lhsStr.begin(), lhsStr.end(), Allocator<char>());
+            result.append(rhsStr.begin(), rhsStr.end());
+
+            ObjString* objStr = allocateAndConstruct<ObjString>(std::move(result));
+
+            push(objStr);
+          } else {
+            throw RuntimeError(bytecode->getLine(currentInstructionAddress()),
+                               "Operator plus is not supported for this type.");
           }
         },
         a, b);

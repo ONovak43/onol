@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include "allocator.hpp"
 #include "bytecode.hpp"
 
 TEST_CASE("Bytecode basic operations", "[bytecode]") {
@@ -66,7 +67,7 @@ TEST_CASE("Bytecode constant operations", "[bytecode]") {
   SECTION("Adding multiple constants to the bytecode and verifying their addresses") {
     Bytecode bytecode;
     Type valueInt = 10;
-    Type valueStr = "test";
+    Type valueStr = allocateAndConstruct<ObjString>("test");
     uint32_t line1 = 10;
     uint32_t line2 = 20;
 
@@ -85,7 +86,7 @@ TEST_CASE("Bytecode instruction tests", "[bytecode]") {
   SECTION("Adding CONSTANT and CONSTANT_LONG instructions") {
     Bytecode bytecode;
     Type valueInt = 10;
-    Type valueStr = "test";
+    Type valueStr = allocateAndConstruct<ObjString>("test");
     uint32_t line1 = 10;
     uint32_t line2 = 20;
 

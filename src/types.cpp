@@ -1,12 +1,32 @@
 #include "types.hpp"
 
+void printObject(const Object* value) {
+    if (value == nullptr) {
+        std::cout << "null object";
+        return;
+    }
+
+    if (auto objString = dynamic_cast<const ObjString*>(value)) {
+        std::cout << "\"" << objString->toString() << "\"";
+    } else {
+        std::cout << value->toString();
+    }
+}
+
 void printValue(const Type& value) {
-    std::visit([](auto&& arg) {
+  std::visit(
+      [](auto&& arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, Null>) {
-            std::cout << "null";
+          std::cout << "null";
+        } else if constexpr (std::is_same_v<T, bool>) {
+          std::cout << (arg ? "true" : "false");
+        } else if constexpr (std::is_same_v<T, Object>) {
+          printObject(arg);
         } else {
-            std::cout << arg;
+          std::cout << arg;
         }
-    }, value);
+      },
+      value);
 }
+

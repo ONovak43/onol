@@ -37,22 +37,29 @@ void Parser::initializeRules() {
       {TokenType::STAR,
        {nullptr, bindMethod(&Parser::binary), Precedence::FACTOR}},
 
-      {TokenType::BANG, {nullptr, nullptr, Precedence::UNARY}},
-      {TokenType::BANG_EQUAL, {nullptr, nullptr, Precedence::EQUALITY}},
+      {TokenType::BANG,
+       {bindMethod(&Parser::unary), nullptr, Precedence::NONE}},
+      {TokenType::BANG_EQUAL,
+       {nullptr, bindMethod(&Parser::binary), Precedence::EQUALITY}},
       {TokenType::EQUAL, {nullptr, nullptr, Precedence::ASSIGNMENT}},
-      {TokenType::EQUAL_EQUAL, {nullptr, nullptr, Precedence::EQUALITY}},
-      {TokenType::GREATER, {nullptr, nullptr, Precedence::COMPARISON}},
-      {TokenType::GREATER_EQUAL, {nullptr, nullptr, Precedence::COMPARISON}},
-      {TokenType::LESS, {nullptr, nullptr, Precedence::COMPARISON}},
-      {TokenType::LESS_EQUAL, {nullptr, nullptr, Precedence::COMPARISON}},
+      {TokenType::EQUAL_EQUAL,
+       {nullptr, bindMethod(&Parser::binary), Precedence::EQUALITY}},
+      {TokenType::GREATER,
+       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+      {TokenType::GREATER_EQUAL,
+       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+      {TokenType::LESS,
+       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+      {TokenType::LESS_EQUAL,
+       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
 
       {TokenType::IDENTIFIER, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::STRING, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::STRING,
+       {bindMethod(&Parser::string), nullptr, Precedence::NONE}},
       {TokenType::INTEGER,
        {bindMethod(&Parser::number), nullptr, Precedence::NONE}},
       {TokenType::DOUBLE,
        {bindMethod(&Parser::number), nullptr, Precedence::NONE}},
-      {TokenType::BOOL, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::TYPE_STRING, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::TYPE_INTEGER, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::TYPE_DOUBLE, {nullptr, nullptr, Precedence::NONE}},
@@ -71,15 +78,18 @@ void Parser::initializeRules() {
       {TokenType::ELSE, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::OR, {nullptr, nullptr, Precedence::OR}},
       {TokenType::AND, {nullptr, nullptr, Precedence::AND}},
-      {TokenType::TRUE, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::FALSE, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::NIL, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::TRUE,
+       {bindMethod(&Parser::literal), nullptr, Precedence::NONE}},
+      {TokenType::FALSE,
+       {bindMethod(&Parser::literal), nullptr, Precedence::NONE}},
+      {TokenType::NUL,
+       {bindMethod(&Parser::literal), nullptr, Precedence::NONE}},
       {TokenType::THIS, {nullptr, nullptr, Precedence::NONE}},
 
       {TokenType::ERROR, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::END, {nullptr, nullptr, Precedence::NONE}},
   };
-}
+};
 
 const ParseRule& Parser::getRule(TokenType type) {
   return rules.at(type);
@@ -117,6 +127,30 @@ void Parser::binary() {
       emitByte(OpCode::DIVIDE);
       break;
     }
+    case TokenType::BANG_EQUAL: {
+      emitByte(OpCode::NOT_EQUAL);
+      break;
+    }
+    case TokenType::EQUAL_EQUAL: {
+      emitByte(OpCode::EQUAL);
+      break;
+    }
+    case TokenType::GREATER: {
+      emitByte(OpCode::GREATER);
+      break;
+    }
+    case TokenType::GREATER_EQUAL: {
+      emitByte(OpCode::GREATER_EQUAL);
+      break;
+    }
+    case TokenType::LESS: {
+      emitByte(OpCode::LESS);
+      break;
+    }
+    case TokenType::LESS_EQUAL: {
+      emitByte(OpCode::LESS_EQUAL);
+      break;
+    }
     default:
       return;
   }
@@ -132,6 +166,10 @@ void Parser::unary() {
       emitByte(OpCode::NEGATE);
       break;
     }
+    case TokenType::BANG: {
+      emitByte(OpCode::NOT);
+      break;
+    }
     default: {
       return;
     }
@@ -144,6 +182,31 @@ void Parser::number() {
     error("Invalid numeric literal.");
   }
   emitConstant(previous->literal.value());
+}
+
+void Parser::string() {
+  ObjString* obj = allocateAndConstruct<ObjString>(previous->lexeme);
+  emitConstant(obj);
+}
+
+void Parser::literal() {
+  switch (previous->type) {
+    case TokenType::FALSE: {
+      emitByte(OpCode::FALSE);
+      break;
+    }
+    case TokenType::TRUE: {
+      emitByte(OpCode::TRUE);
+      break;
+    }
+    case TokenType::NUL: {
+      emitByte(OpCode::NUL);
+      break;
+    }
+    default: {
+      return;
+    }
+  }
 }
 
 void Parser::emitByte(OpCode byte) {
@@ -183,7 +246,7 @@ void Parser::consume(TokenType type, std::string_view message) {
 void Parser::synchronize() {
   try {
     next();
-  } catch (std::exception) {
+  } catch (const InterpreterError&) {
   }
 
   while (current->type != TokenType::END) {
@@ -202,11 +265,13 @@ void Parser::synchronize() {
       case TokenType::RETURN:
       case TokenType::RETURNIF:
         return;
+      default:
+        break;
     }
 
     try {
       next();
-    } catch (std::exception) {
+    } catch (const InterpreterError&) {
     }
   }
 }
@@ -282,7 +347,7 @@ bool Parser::parse(std::string_view sourceCode,
       consume(TokenType::END, "Expected end of expression.");
       endParse();
       break;
-    } catch (const std::exception& ex) {
+    } catch (const InterpreterError& ex) {
       errored = true;
       std::cerr << ex.what() << "\n";
       if (current && current->type == TokenType::END) {
