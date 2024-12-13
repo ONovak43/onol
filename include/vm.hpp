@@ -29,35 +29,19 @@ class VM {
   uint8_t* ip;
   std::deque<Type> stack;
   Parser parser;
-  std::vector<Object> objects;
+  std::vector<Object*> objects;
 
   Type pop();
   void push(Type value);
   std::size_t currentInstructionAddress();
   uint32_t getCurrentLine();
+  String toString(const Type& value);
 
-  String toString(const Type& value) {
-    return std::visit(
-        [](auto&& arg) -> String {
-          using T = std::decay_t<decltype(arg)>;
-          if constexpr (std::is_same_v<T, String>) {
-            return arg;
-          } else if constexpr (std::is_same_v<T, bool>) {
-            return arg ? "true" : "false";
-          } else if constexpr (std::is_same_v<T, Null>) {
-            return "null";
-          } else if constexpr (std::is_same_v<T, Object>) {
-            auto objStr = dynamic_cast<ObjString*>(arg);
-
-            if (objStr) {
-              return objStr->value;
-            }
-            return "object";
-          } else {
-            return "unkown";
-          }
-        },
-        value);
+  template <typename T, typename... Args>
+  T* allocateObject(Args&&... args) {
+    T* obj = allocateAndConstruct<T>(std::forward<Args>(args)...);
+    objects.push_back(obj);
+    return obj;
   }
 
   template <typename Op>
@@ -88,7 +72,7 @@ class VM {
             String result(lhsStr.begin(), lhsStr.end(), Allocator<char>());
             result.append(rhsStr.begin(), rhsStr.end());
 
-            ObjString* objStr = allocateAndConstruct<ObjString>(std::move(result));
+            ObjString* objStr = allocateObject<ObjString>(std::move(result));
 
             push(objStr);
           } else {
@@ -108,6 +92,7 @@ class VM {
   }
 
  public:
+  ~VM();
   InterpretResult interpret(const std::string& sourceCode);
   InterpretResult run();
 };

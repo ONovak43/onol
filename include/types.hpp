@@ -59,3 +59,5 @@ inline bool asBool(const Type& value) {
 inline bool isSameType(const Type& value1, const Type& value2) {
   return value1.index() == value2.index();
 }
+
+ObjString* asString(const Type& value);

@@ -23,7 +23,9 @@ static bool valuesEqual(Type a, Type b) {
         if constexpr (std::is_same_v<T1, T2>) {
           if constexpr (std::is_same_v<T1, Null>) {
             return true;
-          } else if constexpr (std::is_pointer_v<T1> && std::is_base_of_v<Object, std::remove_pointer_t<T1>>) {
+          } else if constexpr (std::is_pointer_v<T1> &&
+                               std::is_base_of_v<Object,
+                                                 std::remove_pointer_t<T1>>) {
             if (!argA || !argB) {
               return false;
             }
@@ -62,6 +64,39 @@ std::size_t VM::currentInstructionAddress() {
 
 uint32_t VM::getCurrentLine() {
   return currentInstructionAddress() - 1;
+}
+
+String VM::toString(const Type& value) {
+  return std::visit(
+      [](auto&& arg) -> String {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, String>) {
+          return arg;
+        } else if constexpr (std::is_same_v<T, bool>) {
+          return arg ? "true" : "false";
+        } else if constexpr (std::is_same_v<T, Null>) {
+          return "null";
+        } else if constexpr (std::is_same_v<T, Object>) {
+          auto objStr = dynamic_cast<ObjString*>(arg);
+
+          if (objStr) {
+            return objStr->value;
+          }
+          return "object";
+        } else {
+          return "unkown";
+        }
+      },
+      value);
+}
+
+VM::~VM() {
+  for (Object* obj : objects) {
+    if (obj) {
+      destructAndDeallocate(obj);
+    }
+  }
+  objects.clear();
 }
 
 InterpretResult VM::interpret(const std::string& sourceCode) {

@@ -185,8 +185,7 @@ void Parser::number() {
 }
 
 void Parser::string() {
-  ObjString* obj = allocateAndConstruct<ObjString>(previous->lexeme);
-  emitConstant(obj);
+  emitConstant(previous->literal.value());
 }
 
 void Parser::literal() {

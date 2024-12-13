@@ -1,4 +1,4 @@
-#include <dynamic_types.hpp>
+#include "dynamic_types.hpp"
 
 bool areEqual(const Object* lhs, const Object* rhs) {
     if (lhs == rhs) {

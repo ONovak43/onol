@@ -29,6 +29,10 @@ struct ObjString : Object {
   ObjString(const char* cstr) : value(cstr, cstr + std::strlen(cstr)) {
   }
 
+  ~ObjString() {
+    std::cout << "ObjStringdestructor" << "\n";
+  }
+
   std::string toString() const override {
     return std::string(value.begin(), value.end());
   }
