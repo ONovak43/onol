@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.cs": "csharp",
         "deque": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -60,6 +61,7 @@
         "variant": "cpp",
         "charconv": "cpp",
         "codecvt": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "typeindex": "cpp"
     }
 }

@@ -73,10 +73,10 @@ std::vector<Token> tokens = {
     {35, TokenType::FN, "fn"},
     {36, TokenType::STRUCT, "struct"},
     {37, TokenType::INTERFACE, "interface"},
-    {38, TokenType::TYPE_BOOL, "bool"},
-    {39, TokenType::TYPE_INTEGER, "int"},
-    {40, TokenType::TYPE_DOUBLE, "double"},
-    {41, TokenType::TYPE_STRING, "string"},
+    {38, TokenType::LET_BOOL, "bool"},
+    {39, TokenType::LET_INTEGER, "int"},
+    {40, TokenType::LET_DOUBLE, "double"},
+    {41, TokenType::LET_STRING, "string"},
     {42, TokenType::TRUE, "true", std::make_optional<Type>(true)},
     {43, TokenType::FALSE, "false", std::make_optional<Type>(false)},
     {44, TokenType::THIS, "this"},
@@ -100,7 +100,7 @@ TEST_CASE("Tokenizer correctly scans tokens") {
 
   int prevLine = 1;
 
-  for (auto i = 0; i < tokens.size() && token && token->type != TokenType::END;
+  for (auto i = 0; i < tokens.size() && token && token->type != TokenType::TEOF;
        token = std::make_unique<Token>(sut.scanToken()), ++i) {
     Token expected = tokens[i];
     if (token->line != expected.line) {
@@ -175,13 +175,13 @@ std::string tokenTypeToString(TokenType type) {
       return "INTEGER";
     case TokenType::DOUBLE:
       return "DOUBLE";
-    case TokenType::TYPE_STRING:
+    case TokenType::LET_STRING:
       return "string";
-    case TokenType::TYPE_INTEGER:
+    case TokenType::LET_INTEGER:
       return "int";
-    case TokenType::TYPE_DOUBLE:
+    case TokenType::LET_DOUBLE:
       return "double";
-    case TokenType::TYPE_BOOL:
+    case TokenType::LET_BOOL:
       return "bool";
     case TokenType::INTERFACE:
       return "interface";
@@ -219,8 +219,8 @@ std::string tokenTypeToString(TokenType type) {
       return "this";
     case TokenType::ERROR:
       return "ERROR";
-    case TokenType::END:
-      return "END";
+    case TokenType::TEOF:
+      return "TEOF";
     default:
       return "UNKNOWN";
   }
@@ -265,11 +265,11 @@ TEST_CASE("Semicolon insertion tests") {
 
     do {
       token = std::make_unique<Token>(tokenizer.scanToken());
-      if (token->type != TokenType::END) {
+      if (token->type != TokenType::TEOF) {
         actualTokens += tokenTypeToString(token->type);
         actualTokens += " ";
       }
-    } while (token->type != TokenType::END);
+    } while (token->type != TokenType::TEOF);
 
     if (!actualTokens.empty()) {
       actualTokens.pop_back();
@@ -392,7 +392,7 @@ TEST_CASE("More complex code is tokenized correctly", "[tokenizer]") {
     REQUIRE(leftParen.line == 1);
     REQUIRE(leftParen.lexeme == "(");
 
-    REQUIRE(parType.type == TokenType::TYPE_INTEGER);
+    REQUIRE(parType.type == TokenType::LET_INTEGER);
     REQUIRE(parType.line == 1);
     REQUIRE(parType.lexeme == "int");
 
@@ -408,7 +408,7 @@ TEST_CASE("More complex code is tokenized correctly", "[tokenizer]") {
     REQUIRE(colon.line == 1);
     REQUIRE(colon.lexeme == ":");
 
-    REQUIRE(returnType.type == TokenType::TYPE_BOOL);
+    REQUIRE(returnType.type == TokenType::LET_BOOL);
     REQUIRE(returnType.line == 1);
     REQUIRE(returnType.lexeme == "bool");
 

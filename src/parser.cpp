@@ -6,6 +6,7 @@
 
 #include "bytecode.hpp"
 #include "debug.hpp"
+#include "interned_strings.hpp"
 #include "token.hpp"
 
 Parser::Parser() {
@@ -19,51 +20,52 @@ void Parser::initializeRules() {
 
   rules = std::unordered_map<TokenType, ParseRule>{
       {TokenType::LEFT_PAREN,
-       {bindMethod(&Parser::grouping), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseGroup), nullptr, Precedence::NONE}},
       {TokenType::RIGHT_PAREN, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::LEFT_BRACE, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::RIGHT_BRACE, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::COMMA, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::DOT, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::MINUS,
-       {bindMethod(&Parser::unary), bindMethod(&Parser::binary),
-        Precedence::TERM}},
+       {bindMethod(&Parser::parseUnaryExpr),
+        bindMethod(&Parser::parseBinaryExpr), Precedence::TERM}},
       {TokenType::PLUS,
-       {nullptr, bindMethod(&Parser::binary), Precedence::TERM}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::TERM}},
       {TokenType::SEMICOLON, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::COLON, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::SLASH,
-       {nullptr, bindMethod(&Parser::binary), Precedence::FACTOR}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::FACTOR}},
       {TokenType::STAR,
-       {nullptr, bindMethod(&Parser::binary), Precedence::FACTOR}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::FACTOR}},
 
       {TokenType::BANG,
-       {bindMethod(&Parser::unary), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseUnaryExpr), nullptr, Precedence::NONE}},
       {TokenType::BANG_EQUAL,
-       {nullptr, bindMethod(&Parser::binary), Precedence::EQUALITY}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::EQUALITY}},
       {TokenType::EQUAL, {nullptr, nullptr, Precedence::ASSIGNMENT}},
       {TokenType::EQUAL_EQUAL,
-       {nullptr, bindMethod(&Parser::binary), Precedence::EQUALITY}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::EQUALITY}},
       {TokenType::GREATER,
-       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::COMPARISON}},
       {TokenType::GREATER_EQUAL,
-       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::COMPARISON}},
       {TokenType::LESS,
-       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::COMPARISON}},
       {TokenType::LESS_EQUAL,
-       {nullptr, bindMethod(&Parser::binary), Precedence::COMPARISON}},
+       {nullptr, bindMethod(&Parser::parseBinaryExpr), Precedence::COMPARISON}},
 
-      {TokenType::IDENTIFIER, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::IDENTIFIER,
+       {bindMethod(&Parser::var), nullptr, Precedence::NONE}},
       {TokenType::STRING,
-       {bindMethod(&Parser::string), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseString), nullptr, Precedence::NONE}},
       {TokenType::INTEGER,
-       {bindMethod(&Parser::number), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseNumber), nullptr, Precedence::NONE}},
       {TokenType::DOUBLE,
-       {bindMethod(&Parser::number), nullptr, Precedence::NONE}},
-      {TokenType::TYPE_STRING, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::TYPE_INTEGER, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::TYPE_DOUBLE, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::TYPE_BOOL, {nullptr, nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseNumber), nullptr, Precedence::NONE}},
+      {TokenType::LET_STRING, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::LET_INTEGER, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::LET_DOUBLE, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::LET_BOOL, {nullptr, nullptr, Precedence::NONE}},
 
       {TokenType::INTERFACE, {nullptr, nullptr, Precedence::NONE}},
       {TokenType::STRUCT, {nullptr, nullptr, Precedence::NONE}},
@@ -79,15 +81,15 @@ void Parser::initializeRules() {
       {TokenType::OR, {nullptr, nullptr, Precedence::OR}},
       {TokenType::AND, {nullptr, nullptr, Precedence::AND}},
       {TokenType::TRUE,
-       {bindMethod(&Parser::literal), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseLiteral), nullptr, Precedence::NONE}},
       {TokenType::FALSE,
-       {bindMethod(&Parser::literal), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseLiteral), nullptr, Precedence::NONE}},
       {TokenType::NUL,
-       {bindMethod(&Parser::literal), nullptr, Precedence::NONE}},
+       {bindMethod(&Parser::parseLiteral), nullptr, Precedence::NONE}},
       {TokenType::THIS, {nullptr, nullptr, Precedence::NONE}},
 
       {TokenType::ERROR, {nullptr, nullptr, Precedence::NONE}},
-      {TokenType::END, {nullptr, nullptr, Precedence::NONE}},
+      {TokenType::TEOF, {nullptr, nullptr, Precedence::NONE}},
   };
 };
 
@@ -95,16 +97,97 @@ const ParseRule& Parser::getRule(TokenType type) {
   return rules.at(type);
 }
 
-void Parser::expression() {
+void Parser::parseDecl() {
+  if (isVarDecl()) {
+    parseVarDecl();
+  } else {
+    parseStmt();
+  }
+}
+
+void Parser::var() {
+  namedVar(previous);
+}
+
+void Parser::namedVar(const std::unique_ptr<Token>& token) {
+  std::size_t arg = identifierConst(token);
+  if (match(TokenType::EQUAL)) {
+    emitVariableByte(OpCode::SET_GLOBAL, OpCode::SET_GLOBAL_LONG, arg);
+  } else {
+    emitVariableByte(OpCode::GET_GLOBAL, OpCode::GET_GLOBAL_LONG, arg);
+  }
+}
+
+bool Parser::isVarDecl() {
+  return match(TokenType::LET) || match(TokenType::LET_BOOL) ||
+         match(TokenType::LET_DOUBLE) || match(TokenType::LET_STRING) ||
+         match(TokenType::LET_INTEGER);
+}
+
+void Parser::parseVarDecl() {
+  bool deducible = !checkPrev(TokenType::LET);
+  auto globalVar = parseVar("Expect variable name");
+
+  if (match(TokenType::EQUAL)) {
+    parseExpr();
+  } else if (deducible) {
+    emitDefaultVarValue();
+  } else {
+    errorAtCurrent("Declaration of variable '" + std::string(current->lexeme) +
+                   "' with deduce type 'let' requires an initializer.");
+  }
+
+  defineVar(globalVar);
+}
+
+std::size_t Parser::parseVar(std::string_view errorMessage) {
+  consume(TokenType::IDENTIFIER, errorMessage);
+  return identifierConst(previous);
+}
+
+std::size_t Parser::identifierConst(const std::unique_ptr<Token>& token) {
+  ObjString* name = getOrIntern(token->lexeme);
+  return compilingCode()->createConstant(name);
+}
+
+void Parser::defineVar(std::size_t globalAddress) {
+  emitVariableByte(OpCode::DEFINE_GLOBAL, OpCode::DEFINE_GLOBAL_LONG,
+                   globalAddress);
+}
+
+void Parser::emitDefaultVarValue() {
+  if (checkPrev(TokenType::LET_BOOL)) {
+    emitByte(OpCode::FALSE);
+  } else if (checkPrev(TokenType::LET_INTEGER)) {
+    emitConstant(0);
+  } else if (checkPrev(TokenType::LET_DOUBLE)) {
+    emitConstant(0.0);
+  } else {
+    ObjString* emptyString = getOrIntern("");
+    emitConstant(emptyString);
+  }
+}
+
+void Parser::parseStmt() {
+  parseExpr();
+}
+
+void Parser::parseExprStmt() {
+  parseExpr();
+  consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+  emitByte(OpCode::POP);
+}
+
+void Parser::parseExpr() {
   parsePrecedence(Precedence::ASSIGNMENT);
 }
 
-void Parser::grouping() {
-  expression();
+void Parser::parseGroup() {
+  parseExpr();
   consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-void Parser::binary() {
+void Parser::parseBinaryExpr() {
   TokenType opType = previous->type;
   const auto& rule = getRule(opType);
   parsePrecedence(
@@ -156,7 +239,7 @@ void Parser::binary() {
   }
 }
 
-void Parser::unary() {
+void Parser::parseUnaryExpr() {
   TokenType opType = previous->type;
 
   parsePrecedence(Precedence::UNARY);
@@ -176,7 +259,7 @@ void Parser::unary() {
   }
 }
 
-void Parser::number() {
+void Parser::parseNumber() {
   if (previous->type != TokenType::INTEGER &&
       previous->type != TokenType::DOUBLE) {
     error("Invalid numeric literal.");
@@ -184,11 +267,11 @@ void Parser::number() {
   emitConstant(previous->literal.value());
 }
 
-void Parser::string() {
+void Parser::parseString() {
   emitConstant(previous->literal.value());
 }
 
-void Parser::literal() {
+void Parser::parseLiteral() {
   switch (previous->type) {
     case TokenType::FALSE: {
       emitByte(OpCode::FALSE);
@@ -208,12 +291,31 @@ void Parser::literal() {
   }
 }
 
+void Parser::emitVariableByte(OpCode shortCode, OpCode longCode,
+                              std::size_t address) {
+  if (address < MAX_CONSTANT_POOL_ADDRESS_LENGTH) {
+    emitByte(shortCode);
+    emitByte(static_cast<uint8_t>(address));
+  } else {
+    emitByte(longCode);
+    emitByte(address);
+  }
+}
+
 void Parser::emitByte(OpCode byte) {
   compilingCode()->putOpCode(byte, previous->line);
 }
 
 void Parser::emitConstant(const Type& value) {
   compilingCode()->putConstant(value, previous->line);
+}
+
+void Parser::emitByte(uint8_t byte) {
+  compilingCode()->putRaw(byte, previous->line);
+}
+
+void Parser::emitByte(std::size_t byte) {
+  compilingCode()->putRaw(byte, previous->line);
 }
 
 std::shared_ptr<Bytecode> Parser::compilingCode() {
@@ -233,6 +335,22 @@ void Parser::next() {
   }
 }
 
+bool Parser::match(TokenType type) {
+  if (!checkCurrent(type)) {
+    return false;
+  }
+  next();
+  return true;
+}
+
+bool Parser::checkCurrent(TokenType type) {
+  return current->type == type;
+}
+
+bool Parser::checkPrev(TokenType type) {
+  return previous->type == type;
+}
+
 void Parser::consume(TokenType type, std::string_view message) {
   if (current->type == type) {
     next();
@@ -248,17 +366,17 @@ void Parser::synchronize() {
   } catch (const InterpreterError&) {
   }
 
-  while (current->type != TokenType::END) {
-    if (previous->type == TokenType::SEMICOLON) return;
+  while (!checkCurrent(TokenType::TEOF)) {
+    if (checkPrev(TokenType::SEMICOLON)) return;
 
     switch (current->type) {
       case TokenType::STRUCT:
       case TokenType::FN:
       case TokenType::LET:
-      case TokenType::TYPE_BOOL:
-      case TokenType::TYPE_DOUBLE:
-      case TokenType::TYPE_INTEGER:
-      case TokenType::TYPE_STRING:
+      case TokenType::LET_BOOL:
+      case TokenType::LET_DOUBLE:
+      case TokenType::LET_INTEGER:
+      case TokenType::LET_STRING:
       case TokenType::FOR:
       case TokenType::IF:
       case TokenType::RETURN:
@@ -291,7 +409,7 @@ void Parser::errorAt(const Token* token, std::string_view message) {
   std::ostringstream errorMsg;
   errorMsg << "Error";
 
-  if (token->type == TokenType::END) {
+  if (token->type == TokenType::TEOF) {
     errorMsg << " at end";
   } else if (token->type == TokenType::ERROR) {
   } else {
@@ -342,14 +460,17 @@ bool Parser::parse(std::string_view sourceCode,
   while (true) {
     try {
       next();
-      expression();
-      consume(TokenType::END, "Expected end of expression.");
+
+      while (!match(TokenType::TEOF)) {
+        parseDecl();
+      }
+
       endParse();
       break;
     } catch (const InterpreterError& ex) {
       errored = true;
       std::cerr << ex.what() << "\n";
-      if (current && current->type == TokenType::END) {
+      if (current && current->type == TokenType::TEOF) {
         break;
       }
       synchronize();

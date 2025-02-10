@@ -32,16 +32,17 @@ enum class TokenType {
   STRING,
   INTEGER,
   DOUBLE,
-  TYPE_STRING,
-  TYPE_INTEGER,
-  TYPE_DOUBLE,
-  TYPE_BOOL,
+
+  LET,
+  LET_STRING,
+  LET_INTEGER,
+  LET_DOUBLE,
+  LET_BOOL,
 
   INTERFACE,
   STRUCT,
   FN,
   MUT,
-  LET,
   FOR,
   IN,
   RETURN,
@@ -56,7 +57,7 @@ enum class TokenType {
   THIS,
 
   ERROR,
-  END,
+  TEOF,
 
   TOKEN_COUNT
 };

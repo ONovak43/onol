@@ -16,7 +16,15 @@ struct hash<String> {
     return std::hash<std::string_view>()(std::string_view(s.data(), s.size()));
   }
 };
-} 
+}  // namespace std
+
+inline std::string toStdString(String str) {
+  return std::string(str.begin(), str.end());
+}
+
+inline String fromStdString(const std::string& str) {
+  return String(str.begin(), str.end(), Allocator<char>());
+}
 
 struct Object {
   virtual ~Object() = default;

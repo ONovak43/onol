@@ -4,10 +4,12 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <variant>
 
 #include "bytecode.hpp"
 #include "debug.hpp"
+#include "dynamic_types.hpp"
 #include "types.hpp"
 
 static bool valuesEqual(Type a, Type b) {
@@ -51,17 +53,29 @@ uint32_t VM::getCurrentLine() {
   return currentInstructionAddress() - 1;
 }
 
+Type VM::readConstantLong() {
+  uint32_t constantAddr = 0;
+  constantAddr |= readByte();
+  constantAddr |= readByte() << 8;
+  constantAddr |= readByte() << 16;
+  return bytecode->getConstant(constantAddr);
+}
+
 String VM::toString(const Type& value) {
   return std::visit(
       [](auto&& arg) -> String {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, String>) {
-          return arg;
+        if constexpr (std::is_same_v<T, ObjString>) {
+          return arg.value;
         } else if constexpr (std::is_same_v<T, bool>) {
           return arg ? "true" : "false";
         } else if constexpr (std::is_same_v<T, Null>) {
           return "null";
-        } else if constexpr (std::is_same_v<T, Object>) {
+        } else if constexpr (std::is_same_v<T, int32_t> ||
+                             std::is_same_v<T, double>) {
+          return String(std::to_string(arg).begin(), std::to_string(arg).end(),
+                        Allocator<char>());
+        } else if constexpr (std::is_same_v<T, Object*>) {
           auto objStr = dynamic_cast<ObjString*>(arg);
 
           if (objStr) {
@@ -105,6 +119,22 @@ InterpretResult VM::interpret(const std::string& sourceCode) {
   return result;
 }
 
+Type VM::peek(std::size_t distance) const {
+  return stack[stack.size() - 1 - distance];
+}
+
+String VM::checkVarExistsAndGetName(Type constName) {
+  ObjString* objName = asString(constName);
+  String varName = objName->value;
+
+  auto it = globals.find(varName);
+  if (it == globals.end()) {
+    auto str = "Undefined variable '" + toStdString(varName) + "'.";
+    throw RuntimeError(getCurrentLine(), str);
+  }
+  return varName;
+}
+
 InterpretResult VM::run() {
   while (true) {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -125,14 +155,40 @@ InterpretResult VM::run() {
         break;
       }
       case OpCode::CONSTANT_LONG: {
-        uint32_t constantAddr = 0;
-        constantAddr |= readByte();
-        constantAddr |= readByte() << 8;
-        constantAddr |= readByte() << 16;
-
-        Type constant = bytecode->getConstant(constantAddr);
-        printValue(constant);
-        std::cout << "\n";
+        Type constant = readConstantLong();
+        push(constant);
+        break;
+      }
+      case OpCode::DEFINE_GLOBAL: {
+        ObjString* objName = asString(readConstant());
+        globals[objName->value] = peek(0);
+        pop();
+        break;
+      }
+      case OpCode::DEFINE_GLOBAL_LONG: {
+        ObjString* objName = asString(readConstantLong());
+        globals[objName->value] = peek(0);
+        pop();
+        break;
+      }
+      case OpCode::GET_GLOBAL: {
+        String varName = checkVarExistsAndGetName(readConstant());
+        push(globals[varName]);
+        break;
+      }
+      case OpCode::GET_GLOBAL_LONG: {
+        String varName = checkVarExistsAndGetName(readConstantLong());
+        push(globals[varName]);
+        break;
+      }
+      case OpCode::SET_GLOBAL: {
+        String varName = checkVarExistsAndGetName(readConstant());
+        globals[varName] = peek(0);
+        break;
+      }
+      case OpCode::SET_GLOBAL_LONG: {
+        String varName = checkVarExistsAndGetName(readConstantLong());
+        globals[varName] = peek(0);
         break;
       }
       case OpCode::ADD: {
@@ -178,9 +234,11 @@ InterpretResult VM::run() {
         }
         break;
       }
+      case OpCode::POP: {
+        pop();
+        break;
+      }
       case OpCode::RETURN: {
-        printValue(pop());
-        std::cout << "\n";
         return InterpretResult::INTERPRET_OK;
       }
       case OpCode::FALSE: {

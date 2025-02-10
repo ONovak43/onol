@@ -24,21 +24,28 @@ void Bytecode::putRaw(uint8_t byte, uint32_t line) {
   addLine(line);
 }
 
-std::size_t Bytecode::putConstant(Type value, uint32_t line) {
-  constantPool.push_back(value);
+void Bytecode::putRaw(std::size_t byte, uint32_t line) {
+  putRaw(static_cast<uint8_t>(byte & 0xff), line);  // little-endian
+  putRaw(static_cast<uint8_t>((byte >> 8) & 0xff), line);
+  putRaw(static_cast<uint8_t>((byte >> 16) & 0xff), line);
+}
 
-  std::size_t constantAddress = constantPool.size() - 1;
+std::size_t Bytecode::putConstant(Type value, uint32_t line) {
+  std::size_t constantAddress = createConstant(value);
   if (constantAddress < 256) {
     putRaw(static_cast<uint8_t>(OpCode::CONSTANT), line);
-    putRaw(constantAddress, line);
+    putRaw(static_cast<uint8_t>(constantAddress), line);
   } else {
     putRaw(static_cast<uint8_t>(OpCode::CONSTANT_LONG), line);
-    putRaw(static_cast<uint8_t>(constantAddress & 0xff), line);  // little-endian
-    putRaw(static_cast<uint8_t>((constantAddress >> 8) & 0xff), line);
-    putRaw(static_cast<uint8_t>((constantAddress >> 16) & 0xff), line);
+    putRaw(constantAddress, line);
   }
 
   return constantAddress;
+}
+
+std::size_t Bytecode::createConstant(Type value) {
+  constantPool.push_back(value);
+  return constantPool.size() - 1;
 }
 
 void Bytecode::free() {

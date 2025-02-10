@@ -213,7 +213,7 @@ Token Tokenizer::scanToken() {
   start = current;
 
   if (isAtEnd()) {
-    return makeToken(TokenType::END);
+    return makeToken(TokenType::TEOF);
   }
 
   insertSemicolon = false;

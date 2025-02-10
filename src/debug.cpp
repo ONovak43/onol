@@ -64,6 +64,18 @@ int disassembleInstruction(Bytecode& bytecode, uint32_t offset) {
       return constantInstruction("CONSTANT", bytecode, offset);
     case OpCode::CONSTANT_LONG:
       return constantLongInstruction("CONSTANT_LONG", bytecode, offset);
+    case OpCode::DEFINE_GLOBAL:
+      return constantInstruction("DEFINE_GLOBAL", bytecode, offset);
+    case OpCode::DEFINE_GLOBAL_LONG:
+      return constantLongInstruction("DEFINE_GLOBAL_LONG", bytecode, offset);
+    case OpCode::GET_GLOBAL:
+      return constantInstruction("GET_GLOBAL", bytecode, offset);
+    case OpCode::GET_GLOBAL_LONG:
+      return constantLongInstruction("GET_GLOBAL_LONG", bytecode, offset);
+    case OpCode::SET_GLOBAL:
+      return constantInstruction("SET_GLOBAL", bytecode, offset);
+    case OpCode::SET_GLOBAL_LONG:
+      return constantLongInstruction("SET_GLOBAL_LONG", bytecode, offset);
     case OpCode::FALSE:
       return simpleInstruction(std::string("FALSE"), offset);
     case OpCode::TRUE:
@@ -94,6 +106,8 @@ int disassembleInstruction(Bytecode& bytecode, uint32_t offset) {
       return simpleInstruction("LESS_EQUAL", offset);
     case OpCode::NOT_EQUAL:
       return simpleInstruction("NOT_EQUAL", offset);
+    case OpCode::POP:
+      return simpleInstruction("OP_POP", offset);
     case OpCode::RETURN:
       return simpleInstruction(std::string("RETURN"), offset);
     default:

@@ -31,10 +31,14 @@ class VM {
   std::deque<Type> stack;
   Parser parser;
   std::vector<Object*, Allocator<Object*>> objects;
-  std::unordered_map<String, ObjString*> internedStrings;
+  std::unordered_map<String, Type> globals;
 
   Type pop();
   void push(Type value);
+  Type peek(std::size_t distance) const;
+
+  String checkVarExistsAndGetName(Type constName);
+
   std::size_t currentInstructionAddress();
   uint32_t getCurrentLine();
   String toString(const Type& value);
@@ -66,10 +70,10 @@ class VM {
                                (std::is_same_v<LHS, double> &&
                                 std::is_same_v<RHS, int32_t>)) {
             push(op(static_cast<double>(lhs), static_cast<double>(rhs)));
-          } else if constexpr (std::is_same_v<LHS, String> ||
-                               std::is_same_v<RHS, String>) {
-            String lhsStr = std::is_same_v<LHS, String> ? lhs : toString(lhs);
-            String rhsStr = std::is_same_v<RHS, String> ? rhs : toString(rhs);
+          } else if constexpr (std::is_same_v<LHS, Object*> ||
+                               std::is_same_v<RHS, Object*>) {
+            String lhsStr = toString(lhs);
+            String rhsStr = toString(rhs);
 
             String result(lhsStr.begin(), lhsStr.end(), Allocator<char>());
             result.append(rhsStr.begin(), rhsStr.end());
@@ -83,6 +87,8 @@ class VM {
         },
         a, b);
   }
+
+  Type readConstantLong();
 
   inline uint8_t readByte() {
     return *ip++;

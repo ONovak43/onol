@@ -1,9 +1,7 @@
 #pragma once
 
-#include <exception>
 #include <functional>
 #include <memory>
-#include <sstream>
 #include <string_view>
 #include <unordered_map>
 
@@ -46,36 +44,59 @@ class ParseError : public InterpreterError {
 
 class Parser {
  private:
+  static constexpr uint16_t MAX_CONSTANT_POOL_ADDRESS_LENGTH = 256;
   std::shared_ptr<Bytecode> compilingBytecode;
   std::unique_ptr<Tokenizer> tokenizer;
   std::unique_ptr<Token> current;
   std::unique_ptr<Token> previous;
   bool errored = false;
 
-  void expression();
-  void grouping();
-  void binary();
-  void unary();
-  void number();
-  void string();
-  void literal();
+  void parseDecl();
+  void parseVarDecl();
+  void parseStmt();
+  void parseExprStmt();
+  void parseExpr();
+  void parseGroup();
+  void parseBinaryExpr();
+  void parseUnaryExpr();
+  void parseNumber();
+  void parseString();
+  void parseLiteral();
+
+  void var();
+  void namedVar(const std::unique_ptr<Token>& token);
 
   void next();
+  bool match(TokenType type);
+  bool checkCurrent(TokenType type);
+  bool checkPrev(TokenType type);
+  bool isVarDecl();
+  std::size_t parseVar(std::string_view errorMessage);
+  std::size_t identifierConst(const std::unique_ptr<Token>& token);
+  void defineVar(std::size_t globalAddress);
+
+  void consume(TokenType type, std::string_view message);
+  void synchronize();
 
   bool hadError();
   void errorAtCurrent(std::string_view message);
   void error(std::string_view message);
   void errorAt(const Token* token, std::string_view message);
+
   void emitByte(OpCode byte);
+  void emitByte(uint8_t byte);
+  void emitByte(std::size_t byte);
+  void emitVariableByte(OpCode shortCode, OpCode longCode, std::size_t address);
   void emitConstant(const Type& value);
   void emitReturn();
+  void emitDefaultVarValue();
+
   void endParse();
   std::shared_ptr<Bytecode> compilingCode();
+
   void parsePrecedence(Precedence precedence);
   const ParseRule& getRule(TokenType type);
   void initializeRules();
-  void consume(TokenType type, std::string_view message);
-  void synchronize();
 
   std::unordered_map<TokenType, ParseRule> rules;
 

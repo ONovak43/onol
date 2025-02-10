@@ -11,6 +11,12 @@
 enum class OpCode : uint8_t {
   CONSTANT,
   CONSTANT_LONG,
+  DEFINE_GLOBAL,
+  DEFINE_GLOBAL_LONG,
+  GET_GLOBAL,
+  GET_GLOBAL_LONG,
+  SET_GLOBAL,
+  SET_GLOBAL_LONG,
   NUL,
   TRUE,
   FALSE,
@@ -26,6 +32,7 @@ enum class OpCode : uint8_t {
   GREATER_EQUAL,
   LESS_EQUAL,
   NOT_EQUAL,
+  POP,
   RETURN
 };
 
@@ -43,8 +50,10 @@ class Bytecode {
 
  public:
   void putRaw(uint8_t byte, uint32_t line);
+  void putRaw(std::size_t byte, uint32_t line);
   void putOpCode(OpCode byte, uint32_t line);
   std::size_t putConstant(Type value, uint32_t line);
+  std::size_t createConstant(Type value);
   void free();
   OpCode getOpCode(int index);
   uint8_t getConstantAddress(int index);
